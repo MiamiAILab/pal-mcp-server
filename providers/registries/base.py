@@ -182,7 +182,7 @@ class CustomModelRegistryBase:
         return set()
 
     def _provider_default(self) -> ProviderType:
-        return ProviderType.OPENROUTER
+        return ProviderType.CUSTOM
 
     def _finalise_entry(self, entry: dict) -> tuple[ModelCapabilities, dict]:
         return ModelCapabilities(**{k: v for k, v in entry.items() if k in CAPABILITY_FIELD_NAMES}), {}

@@ -37,13 +37,13 @@ class TestAutoModeProviderSelection:
 
         # Save original environment
         original_env = {}
-        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY"]:
+        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY"]:
             original_env[key] = os.environ.get(key)
 
         try:
             # Set up environment - only Gemini available
             os.environ["GEMINI_API_KEY"] = "test-key"
-            for key in ["OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY"]:
+            for key in ["OPENAI_API_KEY", "XAI_API_KEY"]:
                 os.environ.pop(key, None)
 
             # Register only Gemini provider
@@ -76,13 +76,13 @@ class TestAutoModeProviderSelection:
 
         # Save original environment
         original_env = {}
-        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY"]:
+        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY"]:
             original_env[key] = os.environ.get(key)
 
         try:
             # Set up environment - only OpenAI available
             os.environ["OPENAI_API_KEY"] = "test-key"
-            for key in ["GEMINI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY"]:
+            for key in ["GEMINI_API_KEY", "XAI_API_KEY"]:
                 os.environ.pop(key, None)
 
             # Register only OpenAI provider
@@ -115,14 +115,14 @@ class TestAutoModeProviderSelection:
 
         # Save original environment
         original_env = {}
-        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY"]:
+        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY"]:
             original_env[key] = os.environ.get(key)
 
         try:
             # Set up environment - both Gemini and OpenAI available
             os.environ["GEMINI_API_KEY"] = "test-key"
             os.environ["OPENAI_API_KEY"] = "test-key"
-            for key in ["XAI_API_KEY", "OPENROUTER_API_KEY"]:
+            for key in ["XAI_API_KEY"]:
                 os.environ.pop(key, None)
 
             # Register both providers
@@ -157,13 +157,13 @@ class TestAutoModeProviderSelection:
 
         # Save original environment
         original_env = {}
-        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "OPENROUTER_API_KEY"]:
+        for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY"]:
             original_env[key] = os.environ.get(key)
 
         try:
             # Set up environment - only XAI available
             os.environ["XAI_API_KEY"] = "test-key"
-            for key in ["GEMINI_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"]:
+            for key in ["GEMINI_API_KEY", "OPENAI_API_KEY"]:
                 os.environ.pop(key, None)
 
             # Register only XAI provider

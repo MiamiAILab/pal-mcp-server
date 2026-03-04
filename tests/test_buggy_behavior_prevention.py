@@ -271,14 +271,3 @@ class TestBuggyBehaviorPrevention:
             # Expected if no base_url configured, skip this test
             pytest.skip("Custom provider requires URL configuration")
 
-    def test_openrouter_provider_alias_listing(self):
-        """OpenRouter provider should expose alias-aware listings."""
-        from providers.openrouter import OpenRouterProvider
-
-        provider = OpenRouterProvider(api_key="test-key")
-        all_known = provider.list_models(respect_restrictions=False, include_aliases=True, lowercase=True, unique=True)
-
-        # Should return a list with both aliases and targets
-        assert isinstance(all_known, list)
-        # Should include some known OpenRouter aliases and their targets
-        # (Exact content depends on registry, but structure should be correct)

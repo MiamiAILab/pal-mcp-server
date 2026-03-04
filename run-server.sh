@@ -1071,8 +1071,6 @@ setup_env_file() {
         "GEMINI_API_KEY:your_gemini_api_key_here"
         "OPENAI_API_KEY:your_openai_api_key_here"
         "XAI_API_KEY:your_xai_api_key_here"
-        "DIAL_API_KEY:your_dial_api_key_here"
-        "OPENROUTER_API_KEY:your_openrouter_api_key_here"
     )
 
     for key_pair in "${api_keys[@]}"; do
@@ -1115,8 +1113,6 @@ check_api_keys() {
         "GEMINI_API_KEY:your_gemini_api_key_here"
         "OPENAI_API_KEY:your_openai_api_key_here"
         "XAI_API_KEY:your_xai_api_key_here"
-        "DIAL_API_KEY:your_dial_api_key_here"
-        "OPENROUTER_API_KEY:your_openrouter_api_key_here"
     )
 
     for key_pair in "${api_keys[@]}"; do
@@ -1145,8 +1141,6 @@ check_api_keys() {
         echo "  GEMINI_API_KEY=your-actual-key"
         echo "  OPENAI_API_KEY=your-actual-key"
         echo "  XAI_API_KEY=your-actual-key"
-        echo "  DIAL_API_KEY=your-actual-key"
-        echo "  OPENROUTER_API_KEY=your-actual-key"
         echo ""
         print_info "You can continue with development setup and add API keys later."
         echo ""
@@ -1196,10 +1190,8 @@ parse_env_variables() {
     if [[ -z "$env_vars" ]]; then
         local api_keys=(
             "GEMINI_API_KEY"
-            "OPENAI_API_KEY" 
+            "OPENAI_API_KEY"
             "XAI_API_KEY"
-            "DIAL_API_KEY"
-            "OPENROUTER_API_KEY"
             "CUSTOM_API_URL"
             "CUSTOM_API_KEY"
             "CUSTOM_MODEL_NAME"

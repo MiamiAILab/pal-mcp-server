@@ -9,7 +9,7 @@ Each provider:
 - Defines supported models using `ModelCapabilities` objects
 - Implements the minimal abstract hooks (`get_provider_type()` and `generate_content()`)
 - Gets wired into `configure_providers()` so environment variables control activation
-- Can leverage helper subclasses (e.g., `AzureOpenAIProvider`) when only client wiring differs
+- Can leverage helper subclasses when only client wiring differs
 
 ### Intelligence score cheatsheet
 
@@ -31,13 +31,6 @@ features ([details here](model_ranking.md)).
 - Inherits all API handling automatically
 
 ⚠️ **Important**: If you implement a custom `generate_content()`, call `_resolve_model_name()` before invoking the SDK so aliases (e.g. `"gpt"` → `"gpt-4"`) resolve correctly. The shared implementations already do this for you.
-
-**Option C: Azure OpenAI (`AzureOpenAIProvider`)**
-- For Azure-hosted deployments of OpenAI models
-- Reuses the OpenAI-compatible pipeline but swaps in the `AzureOpenAI` client and a deployment mapping (canonical model → deployment ID)
-- Define deployments in [`conf/azure_models.json`](../conf/azure_models.json) (or the file referenced by `AZURE_MODELS_CONFIG_PATH`).
-- Entries follow the [`ModelCapabilities`](../providers/shared/model_capabilities.py) schema and must include a `deployment` identifier.
-  See [Azure OpenAI Configuration](azure_openai.md) for a step-by-step walkthrough.
 
 ## Step-by-Step Guide
 
@@ -235,19 +228,6 @@ DISABLED_TOOLS=debug,tracer
 EXAMPLE_ALLOWED_MODELS=example-model-large,example-model-small
 ```
 
-For Azure OpenAI deployments:
-
-```bash
-AZURE_OPENAI_API_KEY=your_azure_openai_key_here
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-# Models are defined in conf/azure_models.json (or AZURE_MODELS_CONFIG_PATH)
-# AZURE_OPENAI_API_VERSION=2024-02-15-preview
-# AZURE_OPENAI_ALLOWED_MODELS=gpt-4o,gpt-4o-mini
-# AZURE_MODELS_CONFIG_PATH=/absolute/path/to/custom_azure_models.json
-```
-
-You can also define Azure models in [`conf/azure_models.json`](../conf/azure_models.json) (the bundled file is empty so you can copy it safely). Each entry mirrors the `ModelCapabilities` schema and must include a `deployment` field. Set `AZURE_MODELS_CONFIG_PATH` if you maintain a custom copy outside the repository.
-
 **Note**: The `description` field in `ModelCapabilities` helps Claude choose the best model in auto mode.
 
 ### 5. Test Your Provider
@@ -268,15 +248,13 @@ assert capabilities.provider == ProviderType.EXAMPLE
 
 ### Provider Priority
 When a user requests a model, providers are checked in priority order:
-1. **Native providers** (Gemini, OpenAI, Example) - handle their specific models
-2. **Custom provider** - handles local/self-hosted models  
-3. **OpenRouter** - catch-all for everything else
+1. **Native providers** (Gemini, OpenAI, X.AI, Example, etc.) - handle their specific models
+2. **Custom provider** - handles local/self-hosted models
 
 ### Model Validation
 `ModelProvider.validate_model_name()` delegates to `get_capabilities()` so most
 providers can rely on the shared implementation. Override it only when you need
-to opt out of that pipeline—for example, `CustomProvider` declines OpenRouter
-models so they fall through to the dedicated OpenRouter provider.
+custom validation logic beyond the shared pipeline.
 
 ### Model Aliases
 Aliases declared on `ModelCapabilities` are applied automatically via

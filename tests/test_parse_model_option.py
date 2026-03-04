@@ -6,24 +6,6 @@ from server import parse_model_option
 class TestParseModelOption:
     """Test cases for model option parsing."""
 
-    def test_openrouter_free_suffix_preserved(self):
-        """Test that OpenRouter :free suffix is preserved as part of model name."""
-        model, option = parse_model_option("openai/gpt-3.5-turbo:free")
-        assert model == "openai/gpt-3.5-turbo:free"
-        assert option is None
-
-    def test_openrouter_beta_suffix_preserved(self):
-        """Test that OpenRouter :beta suffix is preserved as part of model name."""
-        model, option = parse_model_option("anthropic/claude-opus-4.1:beta")
-        assert model == "anthropic/claude-opus-4.1:beta"
-        assert option is None
-
-    def test_openrouter_preview_suffix_preserved(self):
-        """Test that OpenRouter :preview suffix is preserved as part of model name."""
-        model, option = parse_model_option("google/gemini-pro:preview")
-        assert model == "google/gemini-pro:preview"
-        assert option is None
-
     def test_ollama_tag_parsed_as_option(self):
         """Test that Ollama tags are parsed as options."""
         model, option = parse_model_option("llama3.2:latest")
@@ -40,8 +22,8 @@ class TestParseModelOption:
         assert model == "gemini-2.5-pro"
         assert option == "against"
 
-    def test_openrouter_unknown_suffix_parsed_as_option(self):
-        """Test that unknown suffixes on OpenRouter models are parsed as options."""
+    def test_slash_model_suffix_parsed_as_option(self):
+        """Test that suffixes on slash-prefixed models are parsed as options."""
         model, option = parse_model_option("openai/gpt-4:custom-tag")
         assert model == "openai/gpt-4"
         assert option == "custom-tag"
@@ -60,20 +42,16 @@ class TestParseModelOption:
 
     def test_whitespace_handling(self):
         """Test that whitespace is properly stripped."""
-        model, option = parse_model_option("  openai/gpt-3.5-turbo:free  ")
-        assert model == "openai/gpt-3.5-turbo:free"
-        assert option is None
-
         model, option = parse_model_option("  llama3.2 : latest  ")
         assert model == "llama3.2"
         assert option == "latest"
 
-    def test_case_insensitive_suffix_matching(self):
-        """Test that OpenRouter suffix matching is case-insensitive."""
-        model, option = parse_model_option("openai/gpt-3.5-turbo:FREE")
-        assert model == "openai/gpt-3.5-turbo:FREE"  # Original case preserved
-        assert option is None
+    def test_colon_suffix_parsed_as_option(self):
+        """Test that colon suffixes on slash-prefixed models are parsed as options."""
+        model, option = parse_model_option("openai/gpt-3.5-turbo:free")
+        assert model == "openai/gpt-3.5-turbo"
+        assert option == "free"
 
-        model, option = parse_model_option("openai/gpt-3.5-turbo:Free")
-        assert model == "openai/gpt-3.5-turbo:Free"  # Original case preserved
-        assert option is None
+        model, option = parse_model_option("openai/gpt-3.5-turbo:FREE")
+        assert model == "openai/gpt-3.5-turbo"
+        assert option == "FREE"

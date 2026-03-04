@@ -38,11 +38,14 @@ class ModelProviderRegistry:
     PROVIDER_PRIORITY_ORDER = [
         ProviderType.GOOGLE,  # Direct Gemini access
         ProviderType.OPENAI,  # Direct OpenAI access
-        ProviderType.AZURE,  # Azure-hosted OpenAI deployments
         ProviderType.XAI,  # Direct X.AI GROK access
-        ProviderType.DIAL,  # DIAL unified API access
+        ProviderType.MINIMAX,  # Direct MiniMax AI access
+        ProviderType.MOONSHOT,  # Direct Moonshot AI (Kimi) access
+        ProviderType.ZHIPU,  # Direct Zhipu AI (GLM-4) access
+        ProviderType.TOGETHER,  # Together.ai (Qwen3, open models)
+        ProviderType.PERPLEXITY,  # Perplexity AI (Sonar search-augmented models)
+        ProviderType.MISTRAL,  # Mistral AI (Mistral Large, Magistral)
         ProviderType.CUSTOM,  # Local/self-hosted models
-        ProviderType.OPENROUTER,  # Catch-all for cloud models
     ]
 
     def __new__(cls):
@@ -124,21 +127,6 @@ class ModelProviderRegistry:
                 provider_kwargs["base_url"] = gemini_base_url
                 logging.info(f"Initialized Gemini provider with custom endpoint: {gemini_base_url}")
             provider = provider_class(**provider_kwargs)
-        elif provider_type == ProviderType.AZURE:
-            if not api_key:
-                return None
-
-            azure_endpoint = get_env("AZURE_OPENAI_ENDPOINT")
-            if not azure_endpoint:
-                logging.warning("AZURE_OPENAI_ENDPOINT missing – skipping Azure OpenAI provider")
-                return None
-
-            azure_version = get_env("AZURE_OPENAI_API_VERSION")
-            provider = provider_class(
-                api_key=api_key,
-                azure_endpoint=azure_endpoint,
-                api_version=azure_version,
-            )
         else:
             if not api_key:
                 return None
@@ -155,9 +143,8 @@ class ModelProviderRegistry:
         """Get provider instance for a specific model name.
 
         Provider priority order:
-        1. Native APIs (GOOGLE, OPENAI) - Most direct and efficient
+        1. Native APIs (GOOGLE, OPENAI, XAI, etc.) - Most direct and efficient
         2. CUSTOM - For local/private models with specific endpoints
-        3. OPENROUTER - Catch-all for cloud models via unified API
 
         Args:
             model_name: Name of the model (e.g., "gemini-2.5-flash", "gpt5")
@@ -243,7 +230,6 @@ class ModelProviderRegistry:
                 #
                 # Logic: If respect_restrictions=True, provider already filtered models,
                 # so registry should NOT filter them again.
-                # TEST COVERAGE: tests/test_provider_routing_bugs.py::TestOpenRouterAliasRestrictions
                 # =====================================================================================
                 if (
                     restriction_service
@@ -334,11 +320,14 @@ class ModelProviderRegistry:
         key_mapping = {
             ProviderType.GOOGLE: "GEMINI_API_KEY",
             ProviderType.OPENAI: "OPENAI_API_KEY",
-            ProviderType.AZURE: "AZURE_OPENAI_API_KEY",
             ProviderType.XAI: "XAI_API_KEY",
-            ProviderType.OPENROUTER: "OPENROUTER_API_KEY",
             ProviderType.CUSTOM: "CUSTOM_API_KEY",  # Can be empty for providers that don't need auth
-            ProviderType.DIAL: "DIAL_API_KEY",
+            ProviderType.MINIMAX: "MINIMAX_API_KEY",
+            ProviderType.MOONSHOT: "MOONSHOT_API_KEY",
+            ProviderType.ZHIPU: "ZHIPU_API_KEY",
+            ProviderType.TOGETHER: "TOGETHER_API_KEY",
+            ProviderType.PERPLEXITY: "PERPLEXITY_API_KEY",
+            ProviderType.MISTRAL: "MISTRAL_API_KEY",
         }
 
         env_var = key_mapping.get(provider_type)

@@ -22,8 +22,6 @@ OPENAI_API_KEY=your-openai-key
 
 ### API Keys (At least one required)
 
-**Important:** Use EITHER OpenRouter OR native APIs, not both! Having both creates ambiguity about which provider serves each model.
-
 **Option 1: Native APIs (Recommended for direct access)**
 ```env
 # Google Gemini API
@@ -39,15 +37,7 @@ XAI_API_KEY=your_xai_api_key_here
 # Get from: https://console.x.ai/
 ```
 
-**Option 2: OpenRouter (Access multiple models through one API)**
-```env
-# OpenRouter for unified model access
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-# Get from: https://openrouter.ai/
-# If using OpenRouter, comment out native API keys above
-```
-
-**Option 3: Custom API Endpoints (Local models)**
+**Option 2: Custom API Endpoints (Local models)**
 ```env
 # For Ollama, vLLM, LM Studio, etc.
 CUSTOM_API_URL=http://localhost:11434/v1  # Ollama example
@@ -71,8 +61,6 @@ DEFAULT_MODEL=auto  # Claude picks best model for each task (recommended)
   - `conf/openai_models.json` – OpenAI catalogue (can be overridden with `OPENAI_MODELS_CONFIG_PATH`)
   - `conf/gemini_models.json` – Gemini catalogue (`GEMINI_MODELS_CONFIG_PATH`)
   - `conf/xai_models.json` – X.AI / GROK catalogue (`XAI_MODELS_CONFIG_PATH`)
-  - `conf/openrouter_models.json` – OpenRouter catalogue (`OPENROUTER_MODELS_CONFIG_PATH`)
-  - `conf/dial_models.json` – DIAL aggregation catalogue (`DIAL_MODELS_CONFIG_PATH`)
   - `conf/custom_models.json` – Custom/OpenAI-compatible endpoints (`CUSTOM_MODELS_CONFIG_PATH`)
 
   Each JSON file documents the allowed fields via its `_README` block and controls model aliases, capability limits, and feature flags (including `allow_code_generation`). Edit these files (or point the matching `*_MODELS_CONFIG_PATH` variable to your own copy) when you want to adjust context windows, enable JSON mode, enable structured code generation, or expose additional aliases without touching Python code.
@@ -84,7 +72,6 @@ DEFAULT_MODEL=auto  # Claude picks best model for each task (recommended)
   | OpenAI | `gpt-5.2`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5`, `gpt-5.2-pro`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-codex`, `gpt-4.1`, `o3`, `o3-mini`, `o3-pro`, `o4-mini` | `gpt5.2`, `gpt-5.2`, `5.2`, `gpt5.1-codex`, `codex-5.1`, `codex-mini`, `gpt5`, `gpt5pro`, `mini`, `nano`, `codex`, `o3mini`, `o3pro`, `o4mini` |
   | Gemini | `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-2.0-flash-lite` | `pro`, `gemini-pro`, `flash`, `flash-2.0`, `flashlite` |
   | X.AI | `grok-4`, `grok-4.1-fast` | `grok`, `grok4`, `grok-4.1-fast-reasoning` |
-  | OpenRouter | See `conf/openrouter_models.json` for the continually evolving catalogue | e.g., `opus`, `sonnet`, `flash`, `pro`, `mistral` |
   | Custom | User-managed entries such as `llama3.2` | Define your own aliases per entry |
 
   Latest OpenAI entries (`gpt-5.2`, `gpt-5.1-codex`, `gpt-5.1-codex-mini`, `gpt-5.2-pro`) expose 400K-token contexts with large outputs, reasoning-token support, and multimodal inputs. `gpt-5.1-codex` and `gpt-5.2-pro` are Responses-only with streaming disabled, while the base `gpt-5.2` and Codex mini support streaming along with full code-generation flags. Update your manifests if you run custom deployments so these capability bits stay accurate.
@@ -181,8 +168,6 @@ GOOGLE_ALLOWED_MODELS=flash,pro
 # X.AI GROK model restrictions
 XAI_ALLOWED_MODELS=grok-4,grok-4.1-fast-reasoning
 
-# OpenRouter model restrictions (affects models via custom provider)
-OPENROUTER_ALLOWED_MODELS=opus,sonnet,mistral
 ```
 
 **Supported Model Names:** The names/aliases listed in the JSON manifests above are the authoritative source. Keep in mind:
@@ -219,8 +204,6 @@ XAI_ALLOWED_MODELS=grok,grok-4.1-fast-reasoning
 OPENAI_MODELS_CONFIG_PATH=/path/to/openai_models.json
 GEMINI_MODELS_CONFIG_PATH=/path/to/gemini_models.json
 XAI_MODELS_CONFIG_PATH=/path/to/xai_models.json
-OPENROUTER_MODELS_CONFIG_PATH=/path/to/openrouter_models.json
-DIAL_MODELS_CONFIG_PATH=/path/to/dial_models.json
 CUSTOM_MODELS_CONFIG_PATH=/path/to/custom_models.json
 ```
 
@@ -278,15 +261,6 @@ CUSTOM_MODEL_NAME=llama3.2
 LOG_LEVEL=DEBUG
 ```
 
-### OpenRouter Only
-```env
-# Single API for multiple models
-DEFAULT_MODEL=auto
-OPENROUTER_API_KEY=your-openrouter-key
-OPENROUTER_ALLOWED_MODELS=opus,sonnet,gpt-4
-LOG_LEVEL=INFO
-```
-
 ## Important Notes
 
 **Local Networking:**
@@ -294,8 +268,7 @@ LOG_LEVEL=INFO
 - The server runs as a native Python process
 
 **API Key Priority:**
-- Native APIs take priority over OpenRouter when both are configured
-- Avoid configuring both native and OpenRouter for the same models
+- Native APIs are checked in priority order for model routing
 
 **Model Restrictions:**
 - Apply to all usage including auto mode

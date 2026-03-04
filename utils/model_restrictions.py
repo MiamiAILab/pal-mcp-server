@@ -10,14 +10,11 @@ Environment Variables:
 - OPENAI_ALLOWED_MODELS: Comma-separated list of allowed OpenAI models
 - GOOGLE_ALLOWED_MODELS: Comma-separated list of allowed Gemini models
 - XAI_ALLOWED_MODELS: Comma-separated list of allowed X.AI GROK models
-- OPENROUTER_ALLOWED_MODELS: Comma-separated list of allowed OpenRouter models
-- DIAL_ALLOWED_MODELS: Comma-separated list of allowed DIAL models
 
 Example:
     OPENAI_ALLOWED_MODELS=o3-mini,o4-mini
     GOOGLE_ALLOWED_MODELS=flash
     XAI_ALLOWED_MODELS=grok-4,grok-4.1-fast-reasoning
-    OPENROUTER_ALLOWED_MODELS=opus,sonnet,mistral
 """
 
 import logging
@@ -52,8 +49,6 @@ class ModelRestrictionService:
         ProviderType.OPENAI: "OPENAI_ALLOWED_MODELS",
         ProviderType.GOOGLE: "GOOGLE_ALLOWED_MODELS",
         ProviderType.XAI: "XAI_ALLOWED_MODELS",
-        ProviderType.OPENROUTER: "OPENROUTER_ALLOWED_MODELS",
-        ProviderType.DIAL: "DIAL_ALLOWED_MODELS",
     }
 
     def __init__(self):

@@ -2,7 +2,7 @@
 List Models Tool - Display all available models organized by provider
 
 This tool provides a comprehensive view of all AI models available in the system,
-organized by their provider (Gemini, OpenAI, X.AI, OpenRouter, Custom).
+organized by their provider (Gemini, OpenAI, X.AI, Custom).
 It shows which providers are configured and what models can be used.
 """
 
@@ -12,7 +12,6 @@ from typing import Any, Optional
 from mcp.types import TextContent
 
 from providers.registries.custom import CustomEndpointModelRegistry
-from providers.registries.openrouter import OpenRouterModelRegistry
 from tools.models import ToolModelCategory, ToolOutput
 from tools.shared.base_models import ToolRequest
 from tools.shared.base_tool import BaseTool
@@ -100,9 +99,13 @@ class ListModelsTool(BaseTool):
         provider_info = {
             ProviderType.GOOGLE: {"name": "Google Gemini", "env_key": "GEMINI_API_KEY"},
             ProviderType.OPENAI: {"name": "OpenAI", "env_key": "OPENAI_API_KEY"},
-            ProviderType.AZURE: {"name": "Azure OpenAI", "env_key": "AZURE_OPENAI_API_KEY"},
             ProviderType.XAI: {"name": "X.AI (Grok)", "env_key": "XAI_API_KEY"},
-            ProviderType.DIAL: {"name": "AI DIAL", "env_key": "DIAL_API_KEY"},
+            ProviderType.MINIMAX: {"name": "MiniMax AI", "env_key": "MINIMAX_API_KEY"},
+            ProviderType.MOONSHOT: {"name": "Moonshot AI (Kimi)", "env_key": "MOONSHOT_API_KEY"},
+            ProviderType.ZHIPU: {"name": "Zhipu AI (GLM)", "env_key": "ZHIPU_API_KEY"},
+            ProviderType.TOGETHER: {"name": "Together AI", "env_key": "TOGETHER_API_KEY"},
+            ProviderType.PERPLEXITY: {"name": "Perplexity AI", "env_key": "PERPLEXITY_API_KEY"},
+            ProviderType.MISTRAL: {"name": "Mistral AI", "env_key": "MISTRAL_API_KEY"},
         }
 
         def format_model_entry(provider, display_name: str) -> list[str]:
@@ -204,114 +207,6 @@ class ListModelsTool(BaseTool):
 
             output_lines.append("")
 
-        # Check OpenRouter
-        openrouter_key = get_env("OPENROUTER_API_KEY")
-        is_openrouter_configured = openrouter_key and openrouter_key != "your_openrouter_api_key_here"
-
-        output_lines.append(f"## OpenRouter {'✅' if is_openrouter_configured else '❌'}")
-
-        if is_openrouter_configured:
-            output_lines.append("**Status**: Configured and available")
-            output_lines.append("**Description**: Access to multiple cloud AI providers via unified API")
-
-            try:
-                provider = ModelProviderRegistry.get_provider(ProviderType.OPENROUTER)
-                if provider:
-                    registry = OpenRouterModelRegistry()
-
-                    def _format_context(tokens: int) -> str:
-                        if not tokens:
-                            return "?"
-                        if tokens >= 1_000_000:
-                            return f"{tokens // 1_000_000}M"
-                        if tokens >= 1_000:
-                            return f"{tokens // 1_000}K"
-                        return str(tokens)
-
-                    has_restrictions = bool(
-                        restriction_service and restriction_service.has_restrictions(ProviderType.OPENROUTER)
-                    )
-
-                    if has_restrictions:
-                        restricted_names = sorted(set(restricted_models_by_provider.get(ProviderType.OPENROUTER, [])))
-
-                        output_lines.append("\n**Models (policy restricted)**:")
-                        if restricted_names:
-                            for model_name in restricted_names:
-                                try:
-                                    caps = provider.get_capabilities(model_name)
-                                except ValueError:
-                                    output_lines.append(f"- `{model_name}` *(not recognized by provider)*")
-                                    continue
-
-                                context_value = int(caps.context_window or 0)
-                                context_str = _format_context(context_value)
-                                suffix_parts = [f"{context_str} context"]
-                                if caps.supports_extended_thinking:
-                                    suffix_parts.append("thinking")
-                                suffix = ", ".join(suffix_parts)
-
-                                arrow = ""
-                                if caps.model_name.lower() != model_name.lower():
-                                    arrow = f" → `{caps.model_name}`"
-
-                                score = caps.get_effective_capability_rank()
-                                output_lines.append(f"- `{model_name}`{arrow} (score {score}, {suffix})")
-
-                            allowed_set = restriction_service.get_allowed_models(ProviderType.OPENROUTER) or set()
-                            if allowed_set:
-                                output_lines.append(
-                                    f"\n*OpenRouter models restricted by OPENROUTER_ALLOWED_MODELS: {', '.join(sorted(allowed_set))}*"
-                                )
-                        else:
-                            output_lines.append("- *No models allowed by current restriction policy.*")
-                    else:
-                        available_models = provider.list_models(respect_restrictions=True)
-                        providers_models: dict[str, list[tuple[int, str, Optional[Any]]]] = {}
-
-                        for model_name in available_models:
-                            config = registry.resolve(model_name)
-                            provider_name = "other"
-                            if config and "/" in config.model_name:
-                                provider_name = config.model_name.split("/")[0]
-                            elif "/" in model_name:
-                                provider_name = model_name.split("/")[0]
-
-                            providers_models.setdefault(provider_name, [])
-
-                            rank = config.get_effective_capability_rank() if config else 0
-                            providers_models[provider_name].append((rank, model_name, config))
-
-                        output_lines.append("\n**Available Models**:")
-                        for provider_name, models in sorted(providers_models.items()):
-                            output_lines.append(f"\n*{provider_name.title()}:*")
-                            for rank, alias, config in sorted(models, key=lambda item: (-item[0], item[1])):
-                                if config:
-                                    context_str = _format_context(getattr(config, "context_window", 0))
-                                    suffix_parts = [f"{context_str} context"]
-                                    if getattr(config, "supports_extended_thinking", False):
-                                        suffix_parts.append("thinking")
-                                    suffix = ", ".join(suffix_parts)
-
-                                    arrow = ""
-                                    if config.model_name.lower() != alias.lower():
-                                        arrow = f" → `{config.model_name}`"
-
-                                    output_lines.append(f"- `{alias}`{arrow} (score {rank}, {suffix})")
-                                else:
-                                    output_lines.append(f"- `{alias}` (score {rank})")
-                else:
-                    output_lines.append("**Error**: Could not load OpenRouter provider")
-
-            except Exception as e:
-                logger.exception("Error listing OpenRouter models: %s", e)
-                output_lines.append(f"**Error loading models**: {str(e)}")
-        else:
-            output_lines.append("**Status**: Not configured (set OPENROUTER_API_KEY)")
-            output_lines.append("**Note**: Provides access to GPT-5, O3, Mistral, and many more")
-
-        output_lines.append("")
-
         # Check Custom API
         custom_url = get_env("CUSTOM_API_URL")
 
@@ -358,8 +253,6 @@ class ListModelsTool(BaseTool):
                 if ModelProviderRegistry.get_provider(provider_type) is not None
             ]
         )
-        if is_openrouter_configured:
-            configured_count += 1
         if custom_url:
             configured_count += 1
 
@@ -381,7 +274,6 @@ class ListModelsTool(BaseTool):
         output_lines.append("- Use model aliases (e.g., 'flash', 'gpt5', 'opus') for convenience")
         output_lines.append("- In auto mode, the CLI Agent will select the best model for each task")
         output_lines.append("- Custom models are only available when CUSTOM_API_URL is set")
-        output_lines.append("- OpenRouter provides access to many cloud models with one API key")
 
         # Format output
         content = "\n".join(output_lines)

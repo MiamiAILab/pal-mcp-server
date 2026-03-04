@@ -49,12 +49,6 @@ else
     echo "❌ XAI_API_KEY not found"
 fi
 
-if [[ -n "$OPENROUTER_API_KEY" ]] || grep -q "OPENROUTER_API_KEY=" .env 2>/dev/null; then
-    echo "✅ OPENROUTER_API_KEY configured"
-else
-    echo "❌ OPENROUTER_API_KEY not found"
-fi
-
 if [[ -n "$CUSTOM_API_URL" ]] || grep -q "CUSTOM_API_URL=" .env 2>/dev/null; then
     echo "✅ CUSTOM_API_URL configured (local models)"
 else

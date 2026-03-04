@@ -387,24 +387,26 @@ def configure_providers():
     """
     # Log environment variable status for debugging
     logger.debug("Checking environment variables for API keys...")
-    api_keys_to_check = ["OPENAI_API_KEY", "OPENROUTER_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "CUSTOM_API_URL"]
+    api_keys_to_check = ["OPENAI_API_KEY", "GEMINI_API_KEY", "XAI_API_KEY", "CUSTOM_API_URL"]
     for key in api_keys_to_check:
         value = get_env(key)
         logger.debug(f"  {key}: {'[PRESENT]' if value else '[MISSING]'}")
     from providers import ModelProviderRegistry
-    from providers.azure_openai import AzureOpenAIProvider
     from providers.custom import CustomProvider
-    from providers.dial import DIALModelProvider
     from providers.gemini import GeminiModelProvider
+    from providers.minimax import MiniMaxModelProvider
+    from providers.moonshot import MoonshotModelProvider
     from providers.openai import OpenAIModelProvider
-    from providers.openrouter import OpenRouterProvider
     from providers.shared import ProviderType
     from providers.xai import XAIModelProvider
+    from providers.together import TogetherModelProvider
+    from providers.perplexity import PerplexityModelProvider
+    from providers.mistral import MistralModelProvider
+    from providers.zhipu import ZhipuModelProvider
     from utils.model_restrictions import get_restriction_service
 
     valid_providers = []
     has_native_apis = False
-    has_openrouter = False
     has_custom = False
 
     # Check for Gemini API key
@@ -427,27 +429,6 @@ def configure_providers():
         else:
             logger.debug("OpenAI API key is placeholder value")
 
-    # Check for Azure OpenAI configuration
-    azure_key = get_env("AZURE_OPENAI_API_KEY")
-    azure_endpoint = get_env("AZURE_OPENAI_ENDPOINT")
-    azure_models_available = False
-    if azure_key and azure_key != "your_azure_openai_key_here" and azure_endpoint:
-        try:
-            from providers.registries.azure import AzureModelRegistry
-
-            azure_registry = AzureModelRegistry()
-            if azure_registry.list_models():
-                valid_providers.append("Azure OpenAI")
-                has_native_apis = True
-                azure_models_available = True
-                logger.info("Azure OpenAI configuration detected")
-            else:
-                logger.warning(
-                    "Azure OpenAI models configuration is empty. Populate conf/azure_models.json or set AZURE_MODELS_CONFIG_PATH."
-                )
-        except Exception as exc:
-            logger.warning(f"Failed to load Azure OpenAI models: {exc}")
-
     # Check for X.AI API key
     xai_key = get_env("XAI_API_KEY")
     if xai_key and xai_key != "your_xai_api_key_here":
@@ -455,25 +436,47 @@ def configure_providers():
         has_native_apis = True
         logger.info("X.AI API key found - GROK models available")
 
-    # Check for DIAL API key
-    dial_key = get_env("DIAL_API_KEY")
-    if dial_key and dial_key != "your_dial_api_key_here":
-        valid_providers.append("DIAL")
+    # Check for MiniMax API key
+    minimax_key = get_env("MINIMAX_API_KEY")
+    if minimax_key and minimax_key != "your_minimax_api_key_here":
+        valid_providers.append("MiniMax AI")
         has_native_apis = True
-        logger.info("DIAL API key found - DIAL models available")
+        logger.info("MiniMax API key found - MiniMax models available")
 
-    # Check for OpenRouter API key
-    openrouter_key = get_env("OPENROUTER_API_KEY")
-    logger.debug(f"OpenRouter key check: key={'[PRESENT]' if openrouter_key else '[MISSING]'}")
-    if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
-        valid_providers.append("OpenRouter")
-        has_openrouter = True
-        logger.info("OpenRouter API key found - Multiple models available via OpenRouter")
-    else:
-        if not openrouter_key:
-            logger.debug("OpenRouter API key not found in environment")
-        else:
-            logger.debug("OpenRouter API key is placeholder value")
+    # Check for Moonshot API key
+    moonshot_key = get_env("MOONSHOT_API_KEY")
+    if moonshot_key and moonshot_key != "your_moonshot_api_key_here":
+        valid_providers.append("Moonshot AI (Kimi)")
+        has_native_apis = True
+        logger.info("Moonshot API key found - Kimi models available")
+
+    # Check for Zhipu API key
+    zhipu_key = get_env("ZHIPU_API_KEY")
+    if zhipu_key and zhipu_key != "your_zhipu_api_key_here":
+        valid_providers.append("Zhipu AI (GLM-4)")
+        has_native_apis = True
+        logger.info("Zhipu API key found - GLM-4 models available")
+
+    # Check for Together.ai API key
+    together_key = get_env("TOGETHER_API_KEY")
+    if together_key and together_key != "your_together_api_key_here":
+        valid_providers.append("Together AI (Qwen3)")
+        has_native_apis = True
+        logger.info("Together API key found - Qwen3 models available")
+
+    # Check for Perplexity API key
+    perplexity_key = get_env("PERPLEXITY_API_KEY")
+    if perplexity_key and perplexity_key != "your_perplexity_api_key_here":
+        valid_providers.append("Perplexity AI (Sonar)")
+        has_native_apis = True
+        logger.info("Perplexity API key found - Sonar models available")
+
+    # Check for Mistral API key
+    mistral_key = get_env("MISTRAL_API_KEY")
+    if mistral_key and mistral_key != "your_mistral_api_key_here":
+        valid_providers.append("Mistral AI")
+        has_native_apis = True
+        logger.info("Mistral API key found - Mistral models available")
 
     # Check for custom API endpoint (Ollama, vLLM, etc.)
     custom_url = get_env("CUSTOM_API_URL")
@@ -505,18 +508,34 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.OPENAI, OpenAIModelProvider)
             registered_providers.append(ProviderType.OPENAI.value)
             logger.debug(f"Registered provider: {ProviderType.OPENAI.value}")
-        if azure_models_available:
-            ModelProviderRegistry.register_provider(ProviderType.AZURE, AzureOpenAIProvider)
-            registered_providers.append(ProviderType.AZURE.value)
-            logger.debug(f"Registered provider: {ProviderType.AZURE.value}")
         if xai_key and xai_key != "your_xai_api_key_here":
             ModelProviderRegistry.register_provider(ProviderType.XAI, XAIModelProvider)
             registered_providers.append(ProviderType.XAI.value)
             logger.debug(f"Registered provider: {ProviderType.XAI.value}")
-        if dial_key and dial_key != "your_dial_api_key_here":
-            ModelProviderRegistry.register_provider(ProviderType.DIAL, DIALModelProvider)
-            registered_providers.append(ProviderType.DIAL.value)
-            logger.debug(f"Registered provider: {ProviderType.DIAL.value}")
+        if minimax_key and minimax_key != "your_minimax_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.MINIMAX, MiniMaxModelProvider)
+            registered_providers.append(ProviderType.MINIMAX.value)
+            logger.debug(f"Registered provider: {ProviderType.MINIMAX.value}")
+        if moonshot_key and moonshot_key != "your_moonshot_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.MOONSHOT, MoonshotModelProvider)
+            registered_providers.append(ProviderType.MOONSHOT.value)
+            logger.debug(f"Registered provider: {ProviderType.MOONSHOT.value}")
+        if zhipu_key and zhipu_key != "your_zhipu_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.ZHIPU, ZhipuModelProvider)
+            registered_providers.append(ProviderType.ZHIPU.value)
+            logger.debug(f"Registered provider: {ProviderType.ZHIPU.value}")
+        if together_key and together_key != "your_together_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.TOGETHER, TogetherModelProvider)
+            registered_providers.append(ProviderType.TOGETHER.value)
+            logger.debug(f"Registered provider: {ProviderType.TOGETHER.value}")
+        if perplexity_key and perplexity_key != "your_perplexity_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.PERPLEXITY, PerplexityModelProvider)
+            registered_providers.append(ProviderType.PERPLEXITY.value)
+            logger.debug(f"Registered provider: {ProviderType.PERPLEXITY.value}")
+        if mistral_key and mistral_key != "your_mistral_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.MISTRAL, MistralModelProvider)
+            registered_providers.append(ProviderType.MISTRAL.value)
+            logger.debug(f"Registered provider: {ProviderType.MISTRAL.value}")
 
     # 2. Custom provider second (for local/private models)
     if has_custom:
@@ -530,12 +549,6 @@ def configure_providers():
         registered_providers.append(ProviderType.CUSTOM.value)
         logger.debug(f"Registered provider: {ProviderType.CUSTOM.value}")
 
-    # 3. OpenRouter last (catch-all for everything else)
-    if has_openrouter:
-        ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
-        registered_providers.append(ProviderType.OPENROUTER.value)
-        logger.debug(f"Registered provider: {ProviderType.OPENROUTER.value}")
-
     # Log all registered providers
     if registered_providers:
         logger.info(f"Registered providers: {', '.join(registered_providers)}")
@@ -547,8 +560,6 @@ def configure_providers():
             "- GEMINI_API_KEY for Gemini models\n"
             "- OPENAI_API_KEY for OpenAI models\n"
             "- XAI_API_KEY for X.AI GROK models\n"
-            "- DIAL_API_KEY for DIAL models\n"
-            "- OPENROUTER_API_KEY for OpenRouter (multiple models)\n"
             "- CUSTOM_API_URL for local models (Ollama, vLLM, etc.)"
         )
 
@@ -560,8 +571,6 @@ def configure_providers():
         priority_info.append("Native APIs (Gemini, OpenAI)")
     if has_custom:
         priority_info.append("Custom endpoints")
-    if has_openrouter:
-        priority_info.append("OpenRouter (catch-all)")
 
     if len(priority_info) > 1:
         logger.info(f"Provider priority: {' → '.join(priority_info)}")
@@ -600,7 +609,7 @@ def configure_providers():
 
         # Validate restrictions against known models
         provider_instances = {}
-        provider_types_to_validate = [ProviderType.GOOGLE, ProviderType.OPENAI, ProviderType.XAI, ProviderType.DIAL]
+        provider_types_to_validate = [ProviderType.GOOGLE, ProviderType.OPENAI, ProviderType.XAI]
         for provider_type in provider_types_to_validate:
             provider = ModelProviderRegistry.get_provider(provider_type)
             if provider:
@@ -679,11 +688,6 @@ async def handle_list_tools() -> list[Tool]:
                 annotations=tool_annotations,
             )
         )
-
-    # Log cache efficiency info
-    openrouter_key_for_cache = get_env("OPENROUTER_API_KEY")
-    if openrouter_key_for_cache and openrouter_key_for_cache != "your_openrouter_api_key_here":
-        logger.debug("OpenRouter registry cache used efficiently across all tool schemas")
 
     logger.debug(f"Returning {len(tools)} tools to MCP client")
     return tools
@@ -883,8 +887,7 @@ def parse_model_option(model_string: str) -> tuple[str, Optional[str]]:
     Parse model:option format into model name and option.
 
     Handles different formats:
-    - OpenRouter models: preserve :free, :beta, :preview suffixes as part of model name
-    - Ollama/Custom models: split on : to extract tags like :latest
+    - Custom/Ollama models: split on : to extract tags like :latest
     - Consensus stance: extract options like :for, :against
 
     Args:
@@ -894,17 +897,7 @@ def parse_model_option(model_string: str) -> tuple[str, Optional[str]]:
         tuple: (model_name, option) where option may be None
     """
     if ":" in model_string and not model_string.startswith("http"):  # Avoid parsing URLs
-        # Check if this looks like an OpenRouter model (contains /)
-        if "/" in model_string and model_string.count(":") == 1:
-            # Could be openai/gpt-4:something - check what comes after colon
-            parts = model_string.split(":", 1)
-            suffix = parts[1].strip().lower()
-
-            # Known OpenRouter suffixes to preserve
-            if suffix in ["free", "beta", "preview"]:
-                return model_string.strip(), None
-
-        # For other patterns (Ollama tags, consensus stances), split normally
+        # Split on colon for patterns like Ollama tags, consensus stances
         parts = model_string.split(":", 1)
         model_name = parts[0].strip()
         model_option = parts[1].strip() if len(parts) > 1 else None

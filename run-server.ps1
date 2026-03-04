@@ -493,7 +493,6 @@ function Test-ApiKeys {
         "GEMINI_API_KEY"     = "AIza[0-9A-Za-z-_]{35}"
         "OPENAI_API_KEY"     = "sk-[a-zA-Z0-9]{20}T3BlbkFJ[a-zA-Z0-9]{20}"
         "XAI_API_KEY"        = "xai-[a-zA-Z0-9-_]+"
-        "OPENROUTER_API_KEY" = "sk-or-[a-zA-Z0-9-_]+"
     }
     
     foreach ($line in $envContent) {
@@ -869,10 +868,6 @@ GOOGLE_API_KEY=your_google_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 XAI_API_KEY=your_xai_api_key_here
-DIAL_API_KEY=your_dial_api_key_here
-DIAL_API_HOST=your_dial_api_host_here
-DIAL_API_VERSION=your_dial_api_version_here
-OPENROUTER_API_KEY=your_openrouter_api_key_here
 CUSTOM_API_URL=your_custom_api_url_here
 CUSTOM_API_KEY=your_custom_api_key_here
 CUSTOM_MODEL_NAME=your_custom_model_name_here
@@ -889,7 +884,7 @@ DEFAULT_THINKING_MODE_THINKDEEP=high
 #MAX_MCP_OUTPUT_TOKENS=
 #TZ=UTC
 "@
-        
+
         $defaultEnv | Out-File -FilePath ".env" -Encoding UTF8
         Write-Success "Default .env file created"
         Write-Warning "Please edit .env file with your actual API keys"
@@ -897,10 +892,10 @@ DEFAULT_THINKING_MODE_THINKDEEP=high
     else {
         Write-Success ".env file exists"
     }
-    
+
     # Create logs directory for volume mount
     Initialize-Logging
-    
+
     return $true
 }
 
@@ -1806,10 +1801,9 @@ function Test-QwenCliIntegration {
     }
 
     $extraKeys = @(
-        "GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "DIAL_API_KEY", "OPENROUTER_API_KEY",
-        "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_VERSION", "AZURE_OPENAI_ALLOWED_MODELS", "AZURE_MODELS_CONFIG_PATH",
+        "GEMINI_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY",
         "CUSTOM_API_URL", "CUSTOM_API_KEY", "CUSTOM_MODEL_NAME", "DEFAULT_MODEL", "GOOGLE_ALLOWED_MODELS",
-        "OPENAI_ALLOWED_MODELS", "OPENROUTER_ALLOWED_MODELS", "XAI_ALLOWED_MODELS", "DEFAULT_THINKING_MODE_THINKDEEP",
+        "OPENAI_ALLOWED_MODELS", "XAI_ALLOWED_MODELS", "DEFAULT_THINKING_MODE_THINKDEEP",
         "DISABLED_TOOLS", "CONVERSATION_TIMEOUT_HOURS", "MAX_CONVERSATION_TURNS", "LOG_LEVEL", "PAL_MCP_FORCE_ENV_OVERRIDE"
     )
 
@@ -2070,10 +2064,6 @@ GOOGLE_API_KEY=your_google_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 XAI_API_KEY=your_xai_api_key_here
-DIAL_API_KEY=your_dial_api_key_here
-DIAL_API_HOST=your_dial_api_host_here
-DIAL_API_VERSION=your_dial_api_version_here
-OPENROUTER_API_KEY=your_openrouter_api_key_here
 CUSTOM_API_URL=your_custom_api_url_here
 CUSTOM_API_KEY=your_custom_api_key_here
 CUSTOM_MODEL_NAME=your_custom_model_name_here
@@ -2090,7 +2080,7 @@ DEFAULT_THINKING_MODE_THINKDEEP=high
 #MAX_MCP_OUTPUT_TOKENS=
 #TZ=UTC
 "@ | Out-File -FilePath ".env" -Encoding UTF8
-        
+
         Write-Success "Default .env file created"
         Write-Warning "Please edit .env file with your actual API keys"
     }

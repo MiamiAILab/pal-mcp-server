@@ -423,14 +423,7 @@ class OpenAICompatibleProvider(ModelProvider):
             "reasoning": {"effort": effort},
         }
 
-        # Only include store parameter for providers that support it.
-        # OpenRouter's /responses endpoint rejects store:true via Zod validation (Issue #348).
-        # This is an endpoint-level limitation, not model-specific, so we omit for all
-        # OpenRouter /responses calls. If OpenRouter later supports store, revisit this logic.
-        if self.get_provider_type() != ProviderType.OPENROUTER:
-            completion_params["store"] = True
-        else:
-            logging.debug(f"Omitting 'store' parameter for OpenRouter provider (model: {model_name})")
+        completion_params["store"] = True
 
         # Add max tokens if specified (using max_completion_tokens for responses endpoint)
         if max_output_tokens:
@@ -581,8 +574,7 @@ class OpenAICompatibleProvider(ModelProvider):
             messages.append({"role": "user", "content": user_content})
 
         # Prepare completion parameters
-        # Always disable streaming for OpenRouter
-        # MCP doesn't use streaming, and this avoids issues with O3 model access
+        # Always disable streaming - MCP doesn't use streaming
         completion_params = {
             "model": resolved_model,
             "messages": messages,

@@ -49,30 +49,12 @@ class TestCustomProvider:
 
     def test_get_capabilities_from_registry(self):
         """Test get_capabilities returns registry capabilities when available."""
-        # Save original environment
-        original_env = os.environ.get("OPENROUTER_ALLOWED_MODELS")
+        provider = CustomProvider(api_key="test-key", base_url="http://localhost:11434/v1")
 
-        try:
-            # Clear any restrictions
-            os.environ.pop("OPENROUTER_ALLOWED_MODELS", None)
-
-            provider = CustomProvider(api_key="test-key", base_url="http://localhost:11434/v1")
-
-            # OpenRouter-backed models should be handled by the OpenRouter provider
-            with pytest.raises(ValueError):
-                provider.get_capabilities("o3")
-
-            # Test with a custom model from the local registry
-            capabilities = provider.get_capabilities("local-llama")
-            assert capabilities.provider == ProviderType.CUSTOM
-            assert capabilities.context_window > 0
-
-        finally:
-            # Restore original environment
-            if original_env is None:
-                os.environ.pop("OPENROUTER_ALLOWED_MODELS", None)
-            else:
-                os.environ["OPENROUTER_ALLOWED_MODELS"] = original_env
+        # Test with a custom model from the local registry
+        capabilities = provider.get_capabilities("local-llama")
+        assert capabilities.provider == ProviderType.CUSTOM
+        assert capabilities.context_window > 0
 
     def test_get_capabilities_generic_fallback(self):
         """Test get_capabilities raises error for unknown models not in registry."""
@@ -85,11 +67,6 @@ class TestCustomProvider:
     def test_model_alias_resolution(self):
         """Test model alias resolution works correctly."""
         provider = CustomProvider(api_key="test-key", base_url="http://localhost:11434/v1")
-
-        # Test that aliases resolve properly
-        # "llama" now resolves to "meta-llama/llama-3-70b" (the OpenRouter model)
-        resolved = provider._resolve_model_name("llama")
-        assert resolved == "meta-llama/llama-3-70b"
 
         # Test local model alias
         resolved_local = provider._resolve_model_name("local-llama")
@@ -160,64 +137,6 @@ class TestCustomProviderRegistration:
             assert provider is not None
             assert isinstance(provider, CustomProvider)
 
-    def test_dual_provider_setup(self):
-        """Test both OpenRouter and Custom providers can coexist."""
-        from providers.openrouter import OpenRouterProvider
-
-        # Create factory for custom provider
-        def custom_provider_factory(api_key=None):
-            return CustomProvider(api_key="", base_url="http://localhost:11434/v1")
-
-        with patch.dict(
-            os.environ,
-            {
-                "OPENROUTER_API_KEY": "test-openrouter-key",
-                "CUSTOM_API_PLACEHOLDER": "configured",
-                "OPENROUTER_ALLOWED_MODELS": "llama,anthropic/claude-opus-4.1",
-            },
-            clear=True,
-        ):
-            # Register both providers
-            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
-            ModelProviderRegistry.register_provider(ProviderType.CUSTOM, custom_provider_factory)
-
-            # Verify both are available
-            available = ModelProviderRegistry.get_available_providers()
-            assert ProviderType.OPENROUTER in available
-            assert ProviderType.CUSTOM in available
-
-            # Verify both can be retrieved
-            openrouter_provider = ModelProviderRegistry.get_provider(ProviderType.OPENROUTER)
-            custom_provider = ModelProviderRegistry.get_provider(ProviderType.CUSTOM)
-
-            assert openrouter_provider is not None
-            assert custom_provider is not None
-            assert isinstance(custom_provider, CustomProvider)
-
-    def test_provider_priority_selection(self):
-        """Test provider selection prioritizes correctly."""
-        from providers.openrouter import OpenRouterProvider
-
-        def custom_provider_factory(api_key=None):
-            return CustomProvider(api_key="", base_url="http://localhost:11434/v1")
-
-        with patch.dict(
-            os.environ,
-            {
-                "OPENROUTER_API_KEY": "test-openrouter-key",
-                "CUSTOM_API_PLACEHOLDER": "configured",
-                "OPENROUTER_ALLOWED_MODELS": "",
-            },
-            clear=True,
-        ):
-            import utils.model_restrictions
-
-            utils.model_restrictions._restriction_service = None
-            custom_provider = custom_provider_factory()
-            openrouter_provider = OpenRouterProvider(api_key="test-openrouter-key")
-
-            assert not custom_provider.validate_model_name("llama")
-            assert openrouter_provider.validate_model_name("llama")
 
 
 class TestConfigureProvidersFunction:
@@ -252,7 +171,6 @@ class TestConfigureProvidersFunction:
                 # Clear other API keys
                 "GEMINI_API_KEY": "",
                 "OPENAI_API_KEY": "",
-                "OPENROUTER_API_KEY": "",
             },
             clear=True,
         ):
@@ -261,52 +179,6 @@ class TestConfigureProvidersFunction:
             # Verify only custom provider is available
             available = ModelProviderRegistry.get_available_providers()
             assert ProviderType.CUSTOM in available
-            assert ProviderType.OPENROUTER not in available
-
-    def test_configure_providers_openrouter_only(self):
-        """Test configure_providers with only OpenRouter key set."""
-        from server import configure_providers
-
-        with patch.dict(
-            os.environ,
-            {
-                "OPENROUTER_API_KEY": "test-key",
-                # Clear other API keys
-                "GEMINI_API_KEY": "",
-                "OPENAI_API_KEY": "",
-                "CUSTOM_API_URL": "",
-            },
-            clear=True,
-        ):
-            configure_providers()
-
-            # Verify only OpenRouter provider is available
-            available = ModelProviderRegistry.get_available_providers()
-            assert ProviderType.OPENROUTER in available
-            assert ProviderType.CUSTOM not in available
-
-    def test_configure_providers_dual_setup(self):
-        """Test configure_providers with both OpenRouter and Custom configured."""
-        from server import configure_providers
-
-        with patch.dict(
-            os.environ,
-            {
-                "OPENROUTER_API_KEY": "test-openrouter-key",
-                "CUSTOM_API_URL": "http://localhost:11434/v1",
-                "CUSTOM_API_KEY": "",
-                # Clear other API keys
-                "GEMINI_API_KEY": "",
-                "OPENAI_API_KEY": "",
-            },
-            clear=True,
-        ):
-            configure_providers()
-
-            # Verify both providers are available
-            available = ModelProviderRegistry.get_available_providers()
-            assert ProviderType.OPENROUTER in available
-            assert ProviderType.CUSTOM in available
 
     def test_configure_providers_no_valid_keys(self):
         """Test configure_providers raises error when no valid API keys."""
@@ -314,7 +186,7 @@ class TestConfigureProvidersFunction:
 
         with patch.dict(
             os.environ,
-            {"GEMINI_API_KEY": "", "OPENAI_API_KEY": "", "OPENROUTER_API_KEY": "", "CUSTOM_API_URL": ""},
+            {"GEMINI_API_KEY": "", "OPENAI_API_KEY": "", "CUSTOM_API_URL": ""},
             clear=True,
         ):
             with pytest.raises(ValueError, match="At least one API configuration is required"):

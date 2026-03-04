@@ -50,9 +50,8 @@ Regardless of your default configuration, you can specify models per request:
 | **`grok-4`** | X.AI | 256K tokens | Latest flagship Grok model with reasoning, vision | Complex analysis, reasoning tasks |
 | **`grok-4.1-fast-reasoning`** | X.AI | 2M tokens | High-performance Grok 4.1 Fast Reasoning with vision | Fast responses and light reasoning |
 | **`llama`** (Llama 3.2) | Custom/Local | 128K tokens | Local inference, privacy | On-device analysis, cost-free processing |
-| **Any model** | OpenRouter | Varies | Access to GPT-4, Claude, Llama, etc. | User-specified or based on task requirements |
 
-**Mix & Match Providers:** Use multiple providers simultaneously! Set both `OPENROUTER_API_KEY` and `CUSTOM_API_URL` to access 
+**Mix & Match Providers:** Use multiple providers simultaneously! Configure native API keys and `CUSTOM_API_URL` to access
 cloud models (expensive/powerful) AND local models (free/private) in the same conversation.
 
 **Model Capabilities:**
@@ -96,8 +95,7 @@ OPENAI_ALLOWED_MODELS=o3,o4-mini
 
 **Important Notes:**
 - Restrictions apply to all usage including auto mode
-- `OPENROUTER_ALLOWED_MODELS` only affects models defined in `conf/openrouter_models.json`
-- Custom local models (from `conf/custom_models.json`) are not affected by OpenRouter restrictions
+- Custom local models (from `conf/custom_models.json`) use `CUSTOM_ALLOWED_MODELS` for restrictions
 
 ## Thinking Modes
 
@@ -346,7 +344,6 @@ The PAL MCP server supports vision-capable models for analyzing images, diagrams
 **Supported Models:**
 - **Gemini 3.0 Pro & Flash**: Excellent for diagrams, architecture analysis, UI mockups (up to 20MB total)
 - **OpenAI O3/O4 series**: Strong for visual debugging, error screenshots (up to 20MB total)
-- **Claude models via OpenRouter**: Good for code screenshots, visual analysis (up to 5MB total)
 - **Custom models**: Support varies by model, with 40MB maximum enforced for abuse prevention
 
 **Usage Examples:**

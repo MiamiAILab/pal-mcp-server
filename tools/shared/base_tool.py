@@ -81,20 +81,7 @@ class BaseTool(ABC):
     4. Register the tool in server.py's TOOLS dictionary
     """
 
-    # Class-level cache for OpenRouter registry to avoid multiple loads
-    _openrouter_registry_cache = None
     _custom_registry_cache = None
-
-    @classmethod
-    def _get_openrouter_registry(cls):
-        """Get cached OpenRouter registry instance, creating if needed."""
-        # Use BaseTool class directly to ensure cache is shared across all subclasses
-        if BaseTool._openrouter_registry_cache is None:
-            from providers.registries.openrouter import OpenRouterModelRegistry
-
-            BaseTool._openrouter_registry_cache = OpenRouterModelRegistry()
-            logger.debug("Created cached OpenRouter registry instance")
-        return BaseTool._openrouter_registry_cache
 
     @classmethod
     def _get_custom_registry(cls):
@@ -296,20 +283,6 @@ class BaseTool(ABC):
         # Get models from enabled providers only (those with valid API keys)
         all_models = ModelProviderRegistry.get_available_model_names()
 
-        # Add OpenRouter models if OpenRouter is configured
-        openrouter_key = get_env("OPENROUTER_API_KEY")
-        if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
-            try:
-                registry = self._get_openrouter_registry()
-                # Add all aliases from the registry (includes OpenRouter cloud models)
-                for alias in registry.list_aliases():
-                    if alias not in all_models:
-                        all_models.append(alias)
-            except Exception as e:
-                import logging
-
-                logging.debug(f"Failed to add OpenRouter models to enum: {e}")
-
         # Add custom models if custom API is configured
         custom_url = get_env("CUSTOM_API_URL")
         if custom_url:
@@ -474,8 +447,6 @@ class BaseTool(ABC):
             "OPENAI_ALLOWED_MODELS": "OpenAI",
             "GOOGLE_ALLOWED_MODELS": "Google",
             "XAI_ALLOWED_MODELS": "X.AI",
-            "OPENROUTER_ALLOWED_MODELS": "OpenRouter",
-            "DIAL_ALLOWED_MODELS": "DIAL",
         }
 
         notes: list[str] = []
@@ -1322,20 +1293,6 @@ When recommending searches, be specific about what information you need and why 
 
         # Get models from enabled providers only (those with valid API keys)
         all_models = ModelProviderRegistry.get_available_model_names()
-
-        # Add OpenRouter models and their aliases when OpenRouter is configured
-        openrouter_key = get_env("OPENROUTER_API_KEY")
-        if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
-            try:
-                registry = self._get_openrouter_registry()
-
-                for alias in registry.list_aliases():
-                    if alias not in all_models:
-                        all_models.append(alias)
-            except Exception as exc:  # pragma: no cover - logged for observability
-                import logging
-
-                logging.debug(f"Failed to add OpenRouter models to enum: {exc}")
 
         # Add custom models (and their aliases) when a custom endpoint is available
         custom_url = get_env("CUSTOM_API_URL")

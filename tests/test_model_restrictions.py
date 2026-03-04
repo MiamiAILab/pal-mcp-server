@@ -24,13 +24,10 @@ class TestModelRestrictionService:
             assert service.is_allowed(ProviderType.OPENAI, "o3-mini")
             assert service.is_allowed(ProviderType.GOOGLE, "gemini-2.5-pro")
             assert service.is_allowed(ProviderType.GOOGLE, "gemini-2.5-flash")
-            assert service.is_allowed(ProviderType.OPENROUTER, "anthropic/claude-opus-4")
-            assert service.is_allowed(ProviderType.OPENROUTER, "openai/o3")
-
             # Should have no restrictions
             assert not service.has_restrictions(ProviderType.OPENAI)
             assert not service.has_restrictions(ProviderType.GOOGLE)
-            assert not service.has_restrictions(ProviderType.OPENROUTER)
+            assert not service.has_restrictions(ProviderType.XAI)
 
     def test_load_single_model_restriction(self):
         """Test loading a single allowed model."""
@@ -42,9 +39,8 @@ class TestModelRestrictionService:
             assert not service.is_allowed(ProviderType.OPENAI, "o3")
             assert not service.is_allowed(ProviderType.OPENAI, "o4-mini")
 
-            # Google and OpenRouter should have no restrictions
+            # Google should have no restrictions
             assert service.is_allowed(ProviderType.GOOGLE, "gemini-2.5-pro")
-            assert service.is_allowed(ProviderType.OPENROUTER, "anthropic/claude-opus-4")
 
     def test_load_multiple_models_restriction(self):
         """Test loading multiple allowed models."""
@@ -170,38 +166,6 @@ class TestModelRestrictionService:
             assert "o4-mimi" in caplog.text
             assert "not a recognized" in caplog.text
 
-    def test_openrouter_model_restrictions(self):
-        """Test OpenRouter model restrictions functionality."""
-        with patch.dict(os.environ, {"OPENROUTER_ALLOWED_MODELS": "opus,sonnet"}):
-            service = ModelRestrictionService()
-
-            # Should only allow specified OpenRouter models
-            assert service.is_allowed(ProviderType.OPENROUTER, "opus")
-            assert service.is_allowed(ProviderType.OPENROUTER, "sonnet")
-            assert service.is_allowed(ProviderType.OPENROUTER, "anthropic/claude-opus-4", "opus")  # With original name
-            assert not service.is_allowed(ProviderType.OPENROUTER, "haiku")
-            assert not service.is_allowed(ProviderType.OPENROUTER, "anthropic/claude-3-haiku")
-            assert not service.is_allowed(ProviderType.OPENROUTER, "mistral-large")
-
-            # Other providers should have no restrictions
-            assert service.is_allowed(ProviderType.OPENAI, "o3")
-            assert service.is_allowed(ProviderType.GOOGLE, "pro")
-
-            # Should have restrictions for OpenRouter
-            assert service.has_restrictions(ProviderType.OPENROUTER)
-            assert not service.has_restrictions(ProviderType.OPENAI)
-            assert not service.has_restrictions(ProviderType.GOOGLE)
-
-    def test_openrouter_filter_models(self):
-        """Test filtering OpenRouter models based on restrictions."""
-        with patch.dict(os.environ, {"OPENROUTER_ALLOWED_MODELS": "opus,mistral"}):
-            service = ModelRestrictionService()
-
-            models = ["opus", "sonnet", "haiku", "mistral", "llama"]
-            filtered = service.filter_models(ProviderType.OPENROUTER, models)
-
-            assert filtered == ["opus", "mistral"]
-
     def test_combined_provider_restrictions(self):
         """Test that restrictions work correctly when set for multiple providers."""
         with patch.dict(
@@ -209,7 +173,7 @@ class TestModelRestrictionService:
             {
                 "OPENAI_ALLOWED_MODELS": "o3-mini",
                 "GOOGLE_ALLOWED_MODELS": "flash",
-                "OPENROUTER_ALLOWED_MODELS": "opus,sonnet",
+                "XAI_ALLOWED_MODELS": "grok-4",
             },
         ):
             service = ModelRestrictionService()
@@ -222,15 +186,14 @@ class TestModelRestrictionService:
             assert service.is_allowed(ProviderType.GOOGLE, "flash")
             assert not service.is_allowed(ProviderType.GOOGLE, "pro")
 
-            # OpenRouter restrictions
-            assert service.is_allowed(ProviderType.OPENROUTER, "opus")
-            assert service.is_allowed(ProviderType.OPENROUTER, "sonnet")
-            assert not service.is_allowed(ProviderType.OPENROUTER, "haiku")
+            # XAI restrictions
+            assert service.is_allowed(ProviderType.XAI, "grok-4")
+            assert not service.is_allowed(ProviderType.XAI, "grok-3")
 
             # All providers should have restrictions
             assert service.has_restrictions(ProviderType.OPENAI)
             assert service.has_restrictions(ProviderType.GOOGLE)
-            assert service.has_restrictions(ProviderType.OPENROUTER)
+            assert service.has_restrictions(ProviderType.XAI)
 
 
 class TestProviderIntegration:
@@ -344,93 +307,6 @@ class TestProviderIntegration:
         # Should not allow "pro" alias
         assert not provider.validate_model_name("pro")
         assert not provider.validate_model_name("gemini-2.5-pro")
-
-
-class TestCustomProviderOpenRouterRestrictions:
-    """Test custom provider integration with OpenRouter restrictions."""
-
-    @patch.dict(os.environ, {"OPENROUTER_ALLOWED_MODELS": "opus,sonnet", "OPENROUTER_API_KEY": "test-key"})
-    def test_custom_provider_respects_openrouter_restrictions(self):
-        """Test that custom provider correctly defers OpenRouter models to OpenRouter provider."""
-        # Clear any cached restriction service
-        import utils.model_restrictions
-
-        utils.model_restrictions._restriction_service = None
-
-        from providers.custom import CustomProvider
-
-        provider = CustomProvider(base_url="http://test.com/v1")
-
-        # CustomProvider should NOT validate OpenRouter models - they should be deferred to OpenRouter
-        assert not provider.validate_model_name("opus")
-        assert not provider.validate_model_name("sonnet")
-        assert not provider.validate_model_name("haiku")
-
-        # Should still validate custom models defined in conf/custom_models.json
-        assert provider.validate_model_name("local-llama")
-
-    @patch.dict(os.environ, {"OPENROUTER_ALLOWED_MODELS": "opus", "OPENROUTER_API_KEY": "test-key"})
-    def test_custom_provider_openrouter_capabilities_restrictions(self):
-        """Test that custom provider's get_capabilities correctly handles OpenRouter models."""
-        # Clear any cached restriction service
-        import utils.model_restrictions
-
-        utils.model_restrictions._restriction_service = None
-
-        from providers.custom import CustomProvider
-
-        provider = CustomProvider(base_url="http://test.com/v1")
-
-        # For OpenRouter models, CustomProvider should defer by raising
-        with pytest.raises(ValueError):
-            provider.get_capabilities("opus")
-
-        # Should raise for disallowed OpenRouter model (still defers)
-        with pytest.raises(ValueError):
-            provider.get_capabilities("haiku")
-
-        # Should still work for custom models
-        capabilities = provider.get_capabilities("local-llama")
-        assert capabilities.provider == ProviderType.CUSTOM
-
-    @patch.dict(os.environ, {"OPENROUTER_ALLOWED_MODELS": "opus"}, clear=False)
-    def test_custom_provider_no_openrouter_key_ignores_restrictions(self):
-        """Test that when OpenRouter key is not set, cloud models are rejected regardless of restrictions."""
-        # Make sure OPENROUTER_API_KEY is not set
-        if "OPENROUTER_API_KEY" in os.environ:
-            del os.environ["OPENROUTER_API_KEY"]
-        # Clear any cached restriction service
-        import utils.model_restrictions
-
-        utils.model_restrictions._restriction_service = None
-
-        from providers.custom import CustomProvider
-
-        provider = CustomProvider(base_url="http://test.com/v1")
-
-        # Should not validate OpenRouter models when key is not available
-        assert not provider.validate_model_name("opus")  # Even though it's in allowed list
-        assert not provider.validate_model_name("haiku")
-
-        # Should still validate custom models
-        assert provider.validate_model_name("local-llama")
-
-    @patch.dict(os.environ, {"OPENROUTER_ALLOWED_MODELS": "", "OPENROUTER_API_KEY": "test-key"})
-    def test_custom_provider_empty_restrictions_allows_all_openrouter(self):
-        """Test that custom provider correctly defers OpenRouter models regardless of restrictions."""
-        # Clear any cached restriction service
-        import utils.model_restrictions
-
-        utils.model_restrictions._restriction_service = None
-
-        from providers.custom import CustomProvider
-
-        provider = CustomProvider(base_url="http://test.com/v1")
-
-        # CustomProvider should NOT validate OpenRouter models - they should be deferred to OpenRouter
-        assert not provider.validate_model_name("opus")
-        assert not provider.validate_model_name("sonnet")
-        assert not provider.validate_model_name("haiku")
 
 
 class TestRegistryIntegration:

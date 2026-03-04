@@ -53,23 +53,19 @@ class TestWorkflowMetadata:
             "GEMINI_API_KEY",
             "OPENAI_API_KEY",
             "XAI_API_KEY",
-            "OPENROUTER_API_KEY",
-            "OPENROUTER_ALLOWED_MODELS",
         ]:
             original_env[key] = os.environ.get(key)
 
         try:
-            # Set up test environment with OpenRouter API key
-            os.environ.pop("GEMINI_API_KEY", None)
+            # Set up test environment with Gemini API key
             os.environ.pop("OPENAI_API_KEY", None)
             os.environ.pop("XAI_API_KEY", None)
-            os.environ.pop("OPENROUTER_ALLOWED_MODELS", None)  # Clear any restrictions
-            os.environ["OPENROUTER_API_KEY"] = "test-openrouter-key"
+            os.environ["GEMINI_API_KEY"] = "test-gemini-key"
 
-            # Register OpenRouter provider
-            from providers.openrouter import OpenRouterProvider
+            # Register Gemini provider
+            from providers.gemini import GeminiModelProvider
 
-            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
+            ModelProviderRegistry.register_provider(ProviderType.GOOGLE, GeminiModelProvider)
 
             # Create debug tool
             debug_tool = DebugIssueTool()
@@ -115,7 +111,7 @@ class TestWorkflowMetadata:
             # Verify metadata values
             assert metadata["tool_name"] == "debug", "tool_name should be 'debug'"
             assert metadata["model_used"] == model_name, f"model_used should be '{model_name}'"
-            assert metadata["provider_used"] == "openrouter", "provider_used should be 'openrouter'"
+            assert metadata["provider_used"] == "google", "provider_used should be 'google'"
 
         finally:
             # Restore original environment
@@ -136,23 +132,19 @@ class TestWorkflowMetadata:
             "GEMINI_API_KEY",
             "OPENAI_API_KEY",
             "XAI_API_KEY",
-            "OPENROUTER_API_KEY",
-            "OPENROUTER_ALLOWED_MODELS",
         ]:
             original_env[key] = os.environ.get(key)
 
         try:
-            # Set up test environment with OpenRouter API key
-            os.environ.pop("GEMINI_API_KEY", None)
+            # Set up test environment with Gemini API key
             os.environ.pop("OPENAI_API_KEY", None)
             os.environ.pop("XAI_API_KEY", None)
-            os.environ.pop("OPENROUTER_ALLOWED_MODELS", None)  # Clear any restrictions
-            os.environ["OPENROUTER_API_KEY"] = "test-openrouter-key"
+            os.environ["GEMINI_API_KEY"] = "test-gemini-key"
 
-            # Register OpenRouter provider
-            from providers.openrouter import OpenRouterProvider
+            # Register Gemini provider
+            from providers.gemini import GeminiModelProvider
 
-            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
+            ModelProviderRegistry.register_provider(ProviderType.GOOGLE, GeminiModelProvider)
 
             # Create debug tool
             debug_tool = DebugIssueTool()
@@ -195,60 +187,43 @@ class TestWorkflowMetadata:
         """
         Test that workflow tools handle metadata gracefully when model context is missing.
         """
-        # Save original environment
-        original_env = {}
-        for key in ["OPENROUTER_ALLOWED_MODELS"]:
-            original_env[key] = os.environ.get(key)
+        # Create debug tool
+        debug_tool = DebugIssueTool()
 
-        try:
-            # Clear any restrictions
-            os.environ.pop("OPENROUTER_ALLOWED_MODELS", None)
+        # Create arguments without model context (fallback scenario)
+        arguments = {
+            "step": "Test step without model context",
+            "step_number": 1,
+            "total_steps": 1,
+            "next_step_required": False,
+            "findings": "Test findings",
+            "model": "flash",
+            "confidence": "low",
+            # No _model_context or _resolved_model_name
+        }
 
-            # Create debug tool
-            debug_tool = DebugIssueTool()
+        # Execute the workflow tool
+        import asyncio
 
-            # Create arguments without model context (fallback scenario)
-            arguments = {
-                "step": "Test step without model context",
-                "step_number": 1,
-                "total_steps": 1,
-                "next_step_required": False,
-                "findings": "Test findings",
-                "model": "flash",
-                "confidence": "low",
-                # No _model_context or _resolved_model_name
-            }
+        result = asyncio.run(debug_tool.execute_workflow(arguments))
 
-            # Execute the workflow tool
-            import asyncio
+        # Parse the JSON response
+        assert len(result) == 1
+        response_text = result[0].text
+        response_data = json.loads(response_text)
 
-            result = asyncio.run(debug_tool.execute_workflow(arguments))
+        # Verify metadata is still present with fallback values
+        assert "metadata" in response_data, "Workflow response should include metadata even in fallback"
+        metadata = response_data["metadata"]
 
-            # Parse the JSON response
-            assert len(result) == 1
-            response_text = result[0].text
-            response_data = json.loads(response_text)
+        # Verify fallback metadata
+        assert "tool_name" in metadata, "Fallback metadata should include tool_name"
+        assert "model_used" in metadata, "Fallback metadata should include model_used"
+        assert "provider_used" in metadata, "Fallback metadata should include provider_used"
 
-            # Verify metadata is still present with fallback values
-            assert "metadata" in response_data, "Workflow response should include metadata even in fallback"
-            metadata = response_data["metadata"]
-
-            # Verify fallback metadata
-            assert "tool_name" in metadata, "Fallback metadata should include tool_name"
-            assert "model_used" in metadata, "Fallback metadata should include model_used"
-            assert "provider_used" in metadata, "Fallback metadata should include provider_used"
-
-            assert metadata["tool_name"] == "debug", "tool_name should be 'debug'"
-            assert metadata["model_used"] == "flash", "model_used should be from request"
-            assert metadata["provider_used"] == "unknown", "provider_used should be 'unknown' in fallback"
-
-        finally:
-            # Restore original environment
-            for key, value in original_env.items():
-                if value is None:
-                    os.environ.pop(key, None)
-                else:
-                    os.environ[key] = value
+        assert metadata["tool_name"] == "debug", "tool_name should be 'debug'"
+        assert metadata["model_used"] == "flash", "model_used should be from request"
+        assert metadata["provider_used"] == "unknown", "provider_used should be 'unknown' in fallback"
 
     @pytest.mark.no_mock_provider
     def test_workflow_metadata_preserves_existing_response_fields(self):
@@ -261,23 +236,19 @@ class TestWorkflowMetadata:
             "GEMINI_API_KEY",
             "OPENAI_API_KEY",
             "XAI_API_KEY",
-            "OPENROUTER_API_KEY",
-            "OPENROUTER_ALLOWED_MODELS",
         ]:
             original_env[key] = os.environ.get(key)
 
         try:
             # Set up test environment
-            os.environ.pop("GEMINI_API_KEY", None)
             os.environ.pop("OPENAI_API_KEY", None)
             os.environ.pop("XAI_API_KEY", None)
-            os.environ.pop("OPENROUTER_ALLOWED_MODELS", None)  # Clear any restrictions
-            os.environ["OPENROUTER_API_KEY"] = "test-openrouter-key"
+            os.environ["GEMINI_API_KEY"] = "test-gemini-key"
 
-            # Register OpenRouter provider
-            from providers.openrouter import OpenRouterProvider
+            # Register Gemini provider
+            from providers.gemini import GeminiModelProvider
 
-            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
+            ModelProviderRegistry.register_provider(ProviderType.GOOGLE, GeminiModelProvider)
 
             # Create debug tool
             debug_tool = DebugIssueTool()
@@ -322,7 +293,7 @@ class TestWorkflowMetadata:
             metadata = response_data["metadata"]
             assert metadata["tool_name"] == "debug"
             assert metadata["model_used"] == model_name
-            assert metadata["provider_used"] == "openrouter"
+            assert metadata["provider_used"] == "google"
 
             # Verify specific intermediate step fields
             assert response_data["next_step_required"] is True, "next_step_required should be preserved"

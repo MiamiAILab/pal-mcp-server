@@ -49,18 +49,6 @@ class OpenAIModelProvider(RegistryBackedProviderMixin, OpenAICompatibleProvider)
         if builtin is not None:
             return builtin
 
-        try:
-            from .registries.openrouter import OpenRouterModelRegistry
-
-            registry = OpenRouterModelRegistry()
-            config = registry.get_model_config(canonical_name)
-
-            if config and config.provider == ProviderType.OPENAI:
-                return config
-
-        except Exception as exc:  # pragma: no cover - registry failures are non-critical
-            logger.debug(f"Could not resolve custom OpenAI model '{canonical_name}': {exc}")
-
         return None
 
     def _finalise_capabilities(

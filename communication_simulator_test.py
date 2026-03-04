@@ -30,8 +30,6 @@ Available tests:
     model_thinking_config       - Model thinking configuration testing
     o3_model_selection          - O3 model selection and routing testing
     ollama_custom_url           - Ollama custom URL configuration testing
-    openrouter_fallback         - OpenRouter fallback mechanism testing
-    openrouter_models           - OpenRouter models availability testing
     token_allocation_validation - Token allocation and limits validation
     testgen_validation          - TestGen tool validation with specific test function
     refactor_validation         - Refactor tool validation with codesmells

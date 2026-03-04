@@ -187,7 +187,6 @@ if __name__ == "__main__":
 
         # Check for common error indicators
         error_indicators = [
-            "OpenRouter API error",
             "is not a valid model ID",
             "API key not found",
             "Connection error",

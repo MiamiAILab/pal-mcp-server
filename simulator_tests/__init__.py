@@ -25,8 +25,6 @@ from .test_model_thinking_config import TestModelThinkingConfig
 from .test_o3_model_selection import O3ModelSelectionTest
 from .test_o3_pro_expensive import O3ProExpensiveTest
 from .test_ollama_custom_url import OllamaCustomUrlTest
-from .test_openrouter_fallback import OpenRouterFallbackTest
-from .test_openrouter_models import OpenRouterModelsTest
 from .test_per_tool_deduplication import PerToolDeduplicationTest
 from .test_planner_continuation_history import PlannerContinuationHistoryTest
 from .test_planner_validation import PlannerValidationTest
@@ -57,8 +55,6 @@ TEST_REGISTRY = {
     "model_thinking_config": TestModelThinkingConfig,
     "o3_model_selection": O3ModelSelectionTest,
     "ollama_custom_url": OllamaCustomUrlTest,
-    "openrouter_fallback": OpenRouterFallbackTest,
-    "openrouter_models": OpenRouterModelsTest,
     "planner_validation": PlannerValidationTest,
     "planner_continuation_history": PlannerContinuationHistoryTest,
     "precommit_validation": PrecommitWorkflowValidationTest,
@@ -95,8 +91,6 @@ __all__ = [
     "O3ModelSelectionTest",
     "O3ProExpensiveTest",
     "OllamaCustomUrlTest",
-    "OpenRouterFallbackTest",
-    "OpenRouterModelsTest",
     "PlannerValidationTest",
     "PlannerContinuationHistoryTest",
     "PrecommitWorkflowValidationTest",

@@ -31,11 +31,9 @@ function Test-EnvironmentVariables {
     # At least one of these API keys must be set
     $requiredVars = @(
         "GEMINI_API_KEY",
-        "GOOGLE_API_KEY", 
+        "GOOGLE_API_KEY",
         "OPENAI_API_KEY",
-        "XAI_API_KEY",
-        "DIAL_API_KEY",
-        "OPENROUTER_API_KEY"
+        "XAI_API_KEY"
     )
     
     $hasApiKey = $false

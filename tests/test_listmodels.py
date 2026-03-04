@@ -46,7 +46,6 @@ class TestListModelsTool:
             assert "Google Gemini ❌" in content
             assert "OpenAI ❌" in content
             assert "X.AI (Grok) ❌" in content
-            assert "OpenRouter ❌" in content
             assert "Custom/Local API ❌" in content
 
             # Check summary shows 0 configured
@@ -100,24 +99,6 @@ class TestListModelsTool:
 
             # Check summary
             assert "**Configured Providers**: 3" in content
-
-    @pytest.mark.asyncio
-    async def test_execute_with_openrouter(self, tool):
-        """Test listing models with OpenRouter configured"""
-        env_vars = {"OPENROUTER_API_KEY": "test-key", "DEFAULT_MODEL": "auto"}
-
-        with patch.dict(os.environ, env_vars, clear=True):
-            result = await tool.execute({})
-
-            response = json.loads(result[0].text)
-            content = response["content"]
-
-            # Check OpenRouter shows as configured
-            assert "OpenRouter ✅" in content
-            assert "Access to multiple cloud AI providers" in content
-
-            # Should show some models (mocked registry will have some)
-            assert "Available Models" in content
 
     @pytest.mark.asyncio
     async def test_execute_with_custom_api(self, tool):

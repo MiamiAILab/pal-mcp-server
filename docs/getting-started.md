@@ -13,14 +13,7 @@ This guide walks you through setting up the PAL MCP Server from scratch, includi
 
 You need at least one API key. Choose based on your needs:
 
-### Option A: OpenRouter (Recommended for beginners)
-**One API for multiple models**
-- Visit [OpenRouter](https://openrouter.ai/) and sign up
-- Generate an API key
-- Control spending limits in your dashboard
-- Access GPT-4, Claude, Gemini, and more through one API
-
-### Option B: Native Provider APIs
+### Option A: Native Provider APIs
 
 **Gemini (Google):**
 - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
@@ -35,11 +28,7 @@ You need at least one API key. Choose based on your needs:
 - Visit [X.AI Console](https://console.x.ai/)
 - Generate an API key for Grok models
 
-**DIAL Platform:**
-- Visit [DIAL Platform](https://dialx.ai/)
-- Generate API key for vendor-agnostic model access
-
-### Option C: Local Models (Free)
+### Option B: Local Models (Free)
 
 **Ollama:**
 ```bash
@@ -180,7 +169,7 @@ Create or edit `~/.qwen/settings.json`:
 }
 ```
 
-Replace the placeholder API key with the providers you use (Gemini, OpenAI, OpenRouter, etc.).
+Replace the placeholder API key with the providers you use (Gemini, OpenAI, X.AI, etc.).
 
 **For OpenCode CLI:**
 Edit `~/.config/opencode/opencode.json`:
@@ -205,7 +194,7 @@ Edit `~/.config/opencode/opencode.json`:
 }
 ```
 
-Add any other API keys you rely on (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, etc.).
+Add any other API keys you rely on (`OPENAI_API_KEY`, `XAI_API_KEY`, etc.).
 
 #### IDE Clients (Cursor & VS Code)
 
@@ -289,13 +278,6 @@ Add your API keys (at least one required):
 GEMINI_API_KEY=your-gemini-api-key-here      # For Gemini models  
 OPENAI_API_KEY=your-openai-api-key-here      # For GPT-5.2, GPT-5.1-Codex, O3
 XAI_API_KEY=your-xai-api-key-here            # For Grok models
-OPENROUTER_API_KEY=your-openrouter-key       # For multiple models
-
-# DIAL Platform (optional)
-DIAL_API_KEY=your-dial-api-key-here
-DIAL_API_HOST=https://core.dialx.ai          # Default host (optional)
-DIAL_API_VERSION=2024-12-01-preview          # API version (optional) 
-DIAL_ALLOWED_MODELS=o3,gemini-2.5-pro       # Restrict models (optional)
 
 # Custom/Local models (Ollama, vLLM, etc.)
 CUSTOM_API_URL=http://localhost:11434/v1     # Ollama example
@@ -355,8 +337,7 @@ Gemini uses a single `timeout` field per server inside `~/.gemini/settings.json`
 Versions 0.2.1 and newer currently ignore values above ~60 seconds for some transports due to a known regression; if you still see premature disconnects we recommend breaking work into smaller calls or watching the Gemini CLI release notes for the fix.
 
 **Important notes:**
-- ⭐ **No restart needed** - Changes take effect immediately 
-- ⭐ If multiple APIs configured, native APIs take priority over OpenRouter
+- ⭐ **No restart needed** - Changes take effect immediately
 - ⭐ Configure model aliases in [`conf/custom_models.json`](../conf/custom_models.json)
 
 ## Step 4: Test the Installation

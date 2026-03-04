@@ -6,7 +6,6 @@ from utils.env import get_env
 
 from .openai_compatible import OpenAICompatibleProvider
 from .registries.custom import CustomEndpointModelRegistry
-from .registries.openrouter import OpenRouterModelRegistry
 from .shared import ModelCapabilities, ProviderType
 
 
@@ -21,9 +20,6 @@ class CustomProvider(OpenAICompatibleProvider):
         metadata.
 
     Notable behaviour
-        * Uses :class:`OpenRouterModelRegistry` to load model definitions and
-          aliases so custom deployments share the same metadata pipeline as
-          OpenRouter itself.
         * Normalises version-tagged model names (``model:latest``) and applies
           restriction policies just like cloud providers, ensuring consistent
           behaviour across environments.
@@ -151,15 +147,6 @@ class CustomProvider(OpenAICompatibleProvider):
             return base_model
 
         logging.debug(f"Model '{model_name}' not found in registry, using as-is")
-        # Attempt to resolve via OpenRouter registry so aliases still map cleanly
-        openrouter_registry = OpenRouterModelRegistry()
-        openrouter_config = openrouter_registry.resolve(model_name)
-        if openrouter_config:
-            resolved = openrouter_config.model_name
-            self._alias_cache[cache_key] = resolved
-            self._alias_cache.setdefault(resolved.lower(), resolved)
-            return resolved
-
         self._alias_cache[cache_key] = model_name
         return model_name
 

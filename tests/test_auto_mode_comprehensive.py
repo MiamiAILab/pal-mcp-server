@@ -77,7 +77,6 @@ class TestAutoModeComprehensive:
                     "GEMINI_API_KEY": "real-key",
                     "OPENAI_API_KEY": None,
                     "XAI_API_KEY": None,
-                    "OPENROUTER_API_KEY": None,
                 },
                 {
                     "EXTENDED_REASONING": "gemini-3-pro-preview",  # Gemini 3 Pro Preview for deep thinking
@@ -91,7 +90,6 @@ class TestAutoModeComprehensive:
                     "GEMINI_API_KEY": None,
                     "OPENAI_API_KEY": "real-key",
                     "XAI_API_KEY": None,
-                    "OPENROUTER_API_KEY": None,
                 },
                 {
                     "EXTENDED_REASONING": "gpt-5.1-codex",  # GPT-5.1 Codex prioritized for coding tasks
@@ -105,7 +103,6 @@ class TestAutoModeComprehensive:
                     "GEMINI_API_KEY": None,
                     "OPENAI_API_KEY": None,
                     "XAI_API_KEY": "real-key",
-                    "OPENROUTER_API_KEY": None,
                 },
                 {
                     "EXTENDED_REASONING": "grok-4-1-fast-reasoning",  # Latest Grok 4.1 Fast Reasoning
@@ -119,7 +116,6 @@ class TestAutoModeComprehensive:
                     "GEMINI_API_KEY": "real-key",
                     "OPENAI_API_KEY": "real-key",
                     "XAI_API_KEY": None,
-                    "OPENROUTER_API_KEY": None,
                 },
                 {
                     "EXTENDED_REASONING": "gemini-3-pro-preview",  # Gemini 3 Pro Preview comes first in priority
@@ -133,7 +129,6 @@ class TestAutoModeComprehensive:
                     "GEMINI_API_KEY": "real-key",
                     "OPENAI_API_KEY": "real-key",
                     "XAI_API_KEY": "real-key",
-                    "OPENROUTER_API_KEY": None,
                 },
                 {
                     "EXTENDED_REASONING": "gemini-3-pro-preview",  # Gemini 3 Pro Preview comes first in priority
@@ -163,16 +158,12 @@ class TestAutoModeComprehensive:
             importlib.reload(config)
 
             # Register providers based on configuration
-            from providers.openrouter import OpenRouterProvider
-
             if provider_config.get("GEMINI_API_KEY"):
                 ModelProviderRegistry.register_provider(ProviderType.GOOGLE, GeminiModelProvider)
             if provider_config.get("OPENAI_API_KEY"):
                 ModelProviderRegistry.register_provider(ProviderType.OPENAI, OpenAIModelProvider)
             if provider_config.get("XAI_API_KEY"):
                 ModelProviderRegistry.register_provider(ProviderType.XAI, XAIModelProvider)
-            if provider_config.get("OPENROUTER_API_KEY"):
-                ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
 
             # Test each tool category
             for category_name, expected_model in expected_models.items():
@@ -208,7 +199,6 @@ class TestAutoModeComprehensive:
             "GEMINI_API_KEY": "real-key",
             "OPENAI_API_KEY": None,
             "XAI_API_KEY": None,
-            "OPENROUTER_API_KEY": None,
             "DEFAULT_MODEL": "auto",
         }
 
@@ -246,7 +236,6 @@ class TestAutoModeComprehensive:
             "GEMINI_API_KEY": "real-key",
             "OPENAI_API_KEY": None,
             "XAI_API_KEY": None,
-            "OPENROUTER_API_KEY": None,
             "CUSTOM_API_URL": None,
             "DEFAULT_MODEL": "auto",
         }
@@ -303,7 +292,6 @@ class TestAutoModeComprehensive:
             "GEMINI_API_KEY": "real-key",
             "OPENAI_API_KEY": "real-key",
             "XAI_API_KEY": "real-key",
-            "OPENROUTER_API_KEY": None,  # Don't include OpenRouter to avoid infinite models
             "DEFAULT_MODEL": "auto",
         }
 
@@ -352,7 +340,6 @@ class TestAutoModeComprehensive:
             "GEMINI_API_KEY": "real-key",
             "OPENAI_API_KEY": None,
             "XAI_API_KEY": None,
-            "OPENROUTER_API_KEY": None,
             "DEFAULT_MODEL": "auto",
         }
 
@@ -403,7 +390,6 @@ class TestAutoModeComprehensive:
             "GEMINI_API_KEY": "real-key",
             "OPENAI_API_KEY": "real-key",
             "XAI_API_KEY": None,
-            "OPENROUTER_API_KEY": None,
             "DEFAULT_MODEL": "auto",
             "OPENAI_ALLOWED_MODELS": "o4-mini",  # Restrict OpenAI to only o4-mini
         }
@@ -444,57 +430,6 @@ class TestAutoModeComprehensive:
             assert "gemini-2.5-flash" in available_models
             assert "gemini-2.5-pro" in available_models
 
-    def test_openrouter_fallback_when_no_native_apis(self):
-        """Test that OpenRouter provides fallback models when no native APIs are available."""
-
-        provider_config = {
-            "GEMINI_API_KEY": None,
-            "OPENAI_API_KEY": None,
-            "XAI_API_KEY": None,
-            "OPENROUTER_API_KEY": "real-key",
-            "DEFAULT_MODEL": "auto",
-        }
-
-        # Filter out None values to avoid patch.dict errors
-        env_to_set = {k: v for k, v in provider_config.items() if v is not None}
-        env_to_clear = [k for k, v in provider_config.items() if v is None]
-
-        with patch.dict(os.environ, env_to_set, clear=False):
-            # Clear the None-valued environment variables
-            for key in env_to_clear:
-                if key in os.environ:
-                    del os.environ[key]
-            import config
-
-            importlib.reload(config)
-
-            # Register only OpenRouter provider
-            from providers.openrouter import OpenRouterProvider
-
-            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
-
-            # Mock OpenRouter registry to return known models
-            mock_registry = MagicMock()
-            mock_registry.list_models.return_value = [
-                "google/gemini-2.5-flash",
-                "google/gemini-2.5-pro",
-                "openai/o3",
-                "openai/o4-mini",
-                "anthropic/claude-opus-4",
-            ]
-
-            with patch.object(OpenRouterProvider, "_registry", mock_registry):
-                # Get preferred models for different categories
-                extended_reasoning = ModelProviderRegistry.get_preferred_fallback_model(
-                    ToolModelCategory.EXTENDED_REASONING
-                )
-                fast_response = ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.FAST_RESPONSE)
-
-                # Should fallback to known good models even via OpenRouter
-                # The exact model depends on _find_extended_thinking_model implementation
-                assert extended_reasoning is not None
-                assert fast_response is not None
-
     @pytest.mark.asyncio
     async def test_actual_model_name_resolution_in_auto_mode(self, tmp_path):
         """Test that when a model is selected in auto mode, the tool executes successfully."""
@@ -503,7 +438,6 @@ class TestAutoModeComprehensive:
             "GEMINI_API_KEY": "real-key",
             "OPENAI_API_KEY": None,
             "XAI_API_KEY": None,
-            "OPENROUTER_API_KEY": None,
             "DEFAULT_MODEL": "auto",
         }
 

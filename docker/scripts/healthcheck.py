@@ -68,8 +68,6 @@ def check_environment():
         "GOOGLE_API_KEY",
         "OPENAI_API_KEY",
         "XAI_API_KEY",
-        "DIAL_API_KEY",
-        "OPENROUTER_API_KEY",
     ]
 
     has_api_key = any(get_env(key) for key in api_keys)

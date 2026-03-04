@@ -236,7 +236,7 @@ class TestFlexibleModelSelection:
 
 
 class TestCustomProviderFallback:
-    """Test fallback to custom/openrouter providers."""
+    """Test fallback to custom providers."""
 
     def test_extended_reasoning_custom_fallback(self):
         """Test EXTENDED_REASONING with custom provider."""
@@ -313,7 +313,7 @@ class TestAutoModeErrorMessages:
 
 
 class TestProviderHelperMethods:
-    """Test the helper methods for finding models from custom/openrouter."""
+    """Test the helper methods for finding models from custom providers."""
 
     def test_extended_reasoning_with_custom_provider(self):
         """Test extended reasoning model selection with custom provider."""
@@ -328,19 +328,6 @@ class TestProviderHelperMethods:
                 # Custom provider should return a model for extended reasoning
                 model = ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.EXTENDED_REASONING)
                 assert model is not None
-
-    def test_extended_reasoning_with_openrouter(self):
-        """Test extended reasoning model selection with OpenRouter."""
-        # Setup with OpenRouter provider
-        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"}, clear=False):
-            from providers.openrouter import OpenRouterProvider
-
-            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
-
-            # OpenRouter should provide a model for extended reasoning
-            model = ModelProviderRegistry.get_preferred_fallback_model(ToolModelCategory.EXTENDED_REASONING)
-            # Should return first available OpenRouter model
-            assert model is not None
 
     def test_fallback_when_no_providers_available(self):
         """Test fallback when no providers are available."""

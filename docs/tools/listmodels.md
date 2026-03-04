@@ -57,9 +57,6 @@ The tool displays:
 🔹 Custom/Local - ✅ Configured
   • local-llama (llama3.2) - 128K context, local inference
   • Available at: http://localhost:11434/v1
-
-🔹 OpenRouter - ❌ Not configured
-  Set OPENROUTER_API_KEY to enable access to Claude, GPT-4, and more models
 ```
 
 ## When to Use ListModels
@@ -77,7 +74,7 @@ The available models depend on your configuration:
 **API Keys Required:**
 - `GEMINI_API_KEY` - Enables Gemini Pro and Flash models
 - `OPENAI_API_KEY` - Enables OpenAI O3, O4-mini, and GPT models
-- `OPENROUTER_API_KEY` - Enables access to multiple providers through OpenRouter
+- `XAI_API_KEY` - Enables X.AI Grok models
 - `CUSTOM_API_URL` - Enables local/custom models (Ollama, vLLM, etc.)
 
 **Model Restrictions:**
