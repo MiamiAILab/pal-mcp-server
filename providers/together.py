@@ -20,10 +20,10 @@ class TogetherModelProvider(OpenAICompatibleProvider):
 
     # Model configurations using ModelCapabilities objects
     MODEL_CAPABILITIES = {
-        "Qwen/Qwen3-235B-A22B-Thinking-2507": ModelCapabilities(
+        "Qwen/Qwen3.5-397B-A17B": ModelCapabilities(
             provider=ProviderType.TOGETHER,
-            model_name="Qwen/Qwen3-235B-A22B-Thinking-2507",
-            friendly_name="Together AI (Qwen3 235B Thinking)",
+            model_name="Qwen/Qwen3.5-397B-A17B",
+            friendly_name="Together AI (Qwen3.5 397B)",
             context_window=262_144,
             max_output_tokens=16384,
             supports_extended_thinking=True,
@@ -35,9 +35,9 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             max_image_size_mb=0.0,
             supports_temperature=True,
             temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Qwen3 235B Thinking (256K context) - Top-tier MoE reasoning model with 22B active params",
-            aliases=["qwen3-thinking", "qwen3-235b", "qwen-thinking"],
-            intelligence_score=18,
+            description="Qwen3.5 397B (256K context) - Latest Qwen MoE reasoning model with 17B active params, replaces Qwen3 235B",
+            aliases=["qwen3-thinking", "qwen3-235b", "qwen-thinking", "qwen3.5", "qwen3.5-397b"],
+            intelligence_score=19,
         ),
         "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8": ModelCapabilities(
             provider=ProviderType.TOGETHER,
@@ -170,7 +170,7 @@ class TogetherModelProvider(OpenAICompatibleProvider):
         """Check if the model supports extended thinking mode."""
         resolved_name = self._resolve_model_name(model_name)
         return resolved_name in (
-            "Qwen/Qwen3-235B-A22B-Thinking-2507",
+            "Qwen/Qwen3.5-397B-A17B",
             "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
             "Qwen/Qwen3-Coder-Next-FP8",
             "Qwen/Qwen3-Next-80B-A3B-Thinking",

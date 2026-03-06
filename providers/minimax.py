@@ -20,6 +20,26 @@ class MiniMaxModelProvider(OpenAICompatibleProvider):
 
     # Model configurations using ModelCapabilities objects
     MODEL_CAPABILITIES = {
+        "minimax-m2.5": ModelCapabilities(
+            provider=ProviderType.MINIMAX,
+            model_name="minimax-m2.5",
+            friendly_name="MiniMax AI (M2.5)",
+            context_window=200_000,
+            max_output_tokens=16384,
+            supports_extended_thinking=True,
+            supports_system_prompts=True,
+            supports_streaming=True,
+            supports_function_calling=True,
+            supports_json_mode=True,
+            supports_images=False,
+            max_image_size_mb=0.0,
+            supports_temperature=True,
+            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
+            description="MiniMax M2.5 (200K context) - SOTA coding (SWE-Bench 80.2%), agentic tool use, search. Released Feb 2026",
+            aliases=["m2.5", "minimax"],
+            intelligence_score=18,
+            allow_code_generation=True,
+        ),
         "minimax-m2": ModelCapabilities(
             provider=ProviderType.MINIMAX,
             model_name="minimax-m2",
