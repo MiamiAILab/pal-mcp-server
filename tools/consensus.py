@@ -459,6 +459,32 @@ of the evidence, even when it strongly points in one direction.""",
             self.initial_request = request.step
             self.models_to_consult = request.models or []
             self.accumulated_responses = []
+
+            # Content sensitivity filtering: exclude geopolitical providers
+            # when the proposal contains sensitive business information
+            try:
+                from utils.content_sensitivity import get_sensitivity_service
+
+                sensitivity_svc = get_sensitivity_service()
+                is_sensitive, matched_kw = sensitivity_svc.is_sensitive(request.step or "")
+                if is_sensitive:
+                    excluded_values = {p.value for p in sensitivity_svc.get_excluded_providers()}
+                    original_count = len(self.models_to_consult)
+                    self.models_to_consult = [
+                        m
+                        for m in self.models_to_consult
+                        if not self._is_model_from_excluded_provider(m.get("model", ""), excluded_values)
+                    ]
+                    removed = original_count - len(self.models_to_consult)
+                    if removed:
+                        logger.info(
+                            "Consensus: Sensitive content (%s). Excluded %d model(s) from geopolitical providers.",
+                            ", ".join(matched_kw[:5]),
+                            removed,
+                        )
+            except Exception as e:
+                logger.debug("Content sensitivity check skipped: %s", e)
+
             # Set total steps: len(models) (each step includes consultation + response)
             request.total_steps = len(self.models_to_consult)
 
@@ -570,6 +596,14 @@ of the evidence, even when it strongly points in one direction.""",
             return continuation_offer.model_dump()
         except Exception:
             return None
+
+    def _is_model_from_excluded_provider(self, model_name: str, excluded_provider_values: set[str]) -> bool:
+        """Check if a model belongs to an excluded provider."""
+        try:
+            provider = self.get_model_provider(model_name)
+            return provider.get_provider_type().value in excluded_provider_values
+        except Exception:
+            return False
 
     async def _consult_model(self, model_config: dict, request) -> dict:
         """Consult a single model and return its response."""

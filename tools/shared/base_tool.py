@@ -375,10 +375,29 @@ class BaseTool(ABC):
             normalized = normalized.split("/", 1)[-1]
         return normalized
 
-    def _get_ranked_model_summaries(self, limit: int = 5) -> tuple[list[str], int, bool]:
+    def _get_ranked_model_summaries(
+        self, limit: int = 5, prompt_text: str = ""
+    ) -> tuple[list[str], int, bool]:
         """Return formatted, ranked model summaries and restriction status."""
 
         ranked = self._collect_ranked_capabilities()
+
+        # --- Content sensitivity filtering ---
+        sensitivity_excluded: frozenset = frozenset()
+        try:
+            from utils.content_sensitivity import get_sensitivity_service
+
+            sensitivity_service = get_sensitivity_service()
+            is_sensitive, matched_keywords = sensitivity_service.is_sensitive(prompt_text)
+            if is_sensitive:
+                sensitivity_excluded = sensitivity_service.get_excluded_providers()
+                logger.info(
+                    "Sensitive content detected (%s). Excluding geopolitical providers: %s",
+                    ", ".join(matched_keywords[:5]),
+                    ", ".join(p.value for p in sensitivity_excluded),
+                )
+        except Exception:
+            sensitivity_excluded = frozenset()
 
         # Build allowlist map (provider -> lowercase names) when restrictions are active
         allowed_map: dict[Any, set[str]] = {}
@@ -404,6 +423,10 @@ class BaseTool(ABC):
             canonical_lower = canonical_name.lower()
             alias_lower = model_name.lower()
             provider_type = getattr(capabilities, "provider", None)
+
+            # Exclude geopolitical providers when sensitive content detected
+            if provider_type in sensitivity_excluded:
+                continue
 
             if allowed_map:
                 if provider_type not in allowed_map:
@@ -438,7 +461,7 @@ class BaseTool(ABC):
                 base = f"{base}, {', '.join(details)}"
             summaries.append(f"{base})")
 
-        return summaries, len(filtered), bool(allowed_map)
+        return summaries, len(filtered), bool(allowed_map) or bool(sensitivity_excluded)
 
     def _get_restriction_note(self) -> Optional[str]:
         """Return a string describing active per-provider allowlists, if any."""
@@ -447,6 +470,10 @@ class BaseTool(ABC):
             "OPENAI_ALLOWED_MODELS": "OpenAI",
             "GOOGLE_ALLOWED_MODELS": "Google",
             "XAI_ALLOWED_MODELS": "X.AI",
+            "MINIMAX_ALLOWED_MODELS": "MiniMax",
+            "MOONSHOT_ALLOWED_MODELS": "Moonshot",
+            "ZHIPU_ALLOWED_MODELS": "Zhipu",
+            "CUSTOM_ALLOWED_MODELS": "Custom",
         }
 
         notes: list[str] = []

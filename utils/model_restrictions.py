@@ -10,6 +10,10 @@ Environment Variables:
 - OPENAI_ALLOWED_MODELS: Comma-separated list of allowed OpenAI models
 - GOOGLE_ALLOWED_MODELS: Comma-separated list of allowed Gemini models
 - XAI_ALLOWED_MODELS: Comma-separated list of allowed X.AI GROK models
+- MINIMAX_ALLOWED_MODELS: Comma-separated list of allowed MiniMax models
+- MOONSHOT_ALLOWED_MODELS: Comma-separated list of allowed Moonshot/Kimi models
+- ZHIPU_ALLOWED_MODELS: Comma-separated list of allowed Zhipu/GLM models
+- CUSTOM_ALLOWED_MODELS: Comma-separated list of allowed custom/DeepSeek models
 
 Example:
     OPENAI_ALLOWED_MODELS=o3-mini,o4-mini
@@ -49,6 +53,10 @@ class ModelRestrictionService:
         ProviderType.OPENAI: "OPENAI_ALLOWED_MODELS",
         ProviderType.GOOGLE: "GOOGLE_ALLOWED_MODELS",
         ProviderType.XAI: "XAI_ALLOWED_MODELS",
+        ProviderType.MINIMAX: "MINIMAX_ALLOWED_MODELS",
+        ProviderType.MOONSHOT: "MOONSHOT_ALLOWED_MODELS",
+        ProviderType.ZHIPU: "ZHIPU_ALLOWED_MODELS",
+        ProviderType.CUSTOM: "CUSTOM_ALLOWED_MODELS",
     }
 
     def __init__(self):
