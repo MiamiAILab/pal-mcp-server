@@ -5,7 +5,7 @@
     "usage": "Models listed here are exposed directly through the Gemini provider. Aliases are case-insensitive.",
     "field_notes": "Matches providers/shared/model_capabilities.py.",
     "field_descriptions": {
-      "model_name": "The model identifier (e.g., 'gemini-2.5-pro', 'gemini-2.0-flash')",
+      "model_name": "The model identifier (e.g., 'gemini-3.1-pro-preview')",
       "aliases": "Array of short names users can type instead of the full model name",
       "context_window": "Total number of tokens the model can process (input + output combined)",
       "max_output_tokens": "Maximum number of tokens the model can generate in a single response",
@@ -27,7 +27,7 @@
   "models": [
     {
       "model_name": "gemini-3.1-pro-preview",
-      "friendly_name": "Gemini Pro 3.1 Preview",
+      "friendly_name": "Gemini 3.1 Pro Preview",
       "aliases": [
         "pro",
         "gemini3",
@@ -35,7 +35,7 @@
         "gemini-3.1"
       ],
       "intelligence_score": 19,
-      "description": "Top reasoning model (1M context) - #1 on reasoning leaderboards, replaces Gemini 3 Pro (deprecated Mar 9)",
+      "description": "Gemini 3.1 Pro Preview (1M context, 65K output) - Current frontier multimodal model with thinking, replaces Gemini 3 Pro Preview.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "max_thinking_tokens": 32768,
@@ -50,16 +50,18 @@
       "max_image_size_mb": 32.0
     },
     {
-      "model_name": "gemini-2.5-pro",
-      "friendly_name": "Gemini Pro 2.5",
+      "model_name": "gemini-3-flash-preview",
+      "friendly_name": "Gemini 3 Flash Preview",
       "aliases": [
-        "gemini-pro-2.5"
+        "flash",
+        "gemini-3-flash",
+        "gemini3-flash"
       ],
-      "intelligence_score": 18,
-      "description": "Older Model. 1M context - Complex problems, architecture, deep analysis",
+      "intelligence_score": 15,
+      "description": "Gemini 3 Flash Preview (1M context, 65K output) - Frontier-class performance rivaling larger models at a fraction of the cost.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
-      "max_thinking_tokens": 32768,
+      "max_thinking_tokens": 24576,
       "supports_extended_thinking": true,
       "supports_system_prompts": true,
       "supports_streaming": true,
@@ -67,18 +69,18 @@
       "supports_json_mode": true,
       "supports_images": true,
       "supports_temperature": true,
-      "allow_code_generation": true,
       "max_image_size_mb": 32.0
     },
     {
-      "model_name": "gemini-2.0-flash",
-      "friendly_name": "Gemini (Flash 2.0)",
+      "model_name": "gemini-3.1-flash-lite-preview",
+      "friendly_name": "Gemini 3.1 Flash Lite Preview",
       "aliases": [
-        "flash-2.0",
-        "flash2"
+        "flash-lite",
+        "flashlite",
+        "gemini-3.1-flash-lite"
       ],
-      "intelligence_score": 9,
-      "description": "Gemini 2.0 Flash (1M context) - Latest fast model, supports audio/video input",
+      "intelligence_score": 10,
+      "description": "Gemini 3.1 Flash Lite Preview (1M context) - Lightweight Gemini 3.1 variant optimized for speed and cost.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "supports_extended_thinking": false,
@@ -91,37 +93,60 @@
       "max_image_size_mb": 20.0
     },
     {
-      "model_name": "gemini-2.0-flash-lite",
-      "friendly_name": "Gemini (Flash Lite 2.0)",
+      "model_name": "gemini-2.5-pro",
+      "friendly_name": "Gemini 2.5 Pro",
       "aliases": [
-        "flashlite",
-        "flash-lite"
+        "gemini-pro-2.5",
+        "gemini-2.5"
       ],
-      "intelligence_score": 7,
-      "description": "Gemini 2.0 Flash Lite (1M context) - Lightweight fast model, text-only",
+      "intelligence_score": 17,
+      "description": "Gemini 2.5 Pro (1M context, 65K output) - Previous-gen flagship for complex reasoning and coding.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
-      "supports_extended_thinking": false,
+      "max_thinking_tokens": 32768,
+      "supports_extended_thinking": true,
       "supports_system_prompts": true,
       "supports_streaming": true,
       "supports_function_calling": true,
       "supports_json_mode": true,
-      "supports_images": false,
-      "supports_temperature": true
+      "supports_images": true,
+      "supports_temperature": true,
+      "allow_code_generation": true,
+      "max_image_size_mb": 32.0
     },
     {
       "model_name": "gemini-2.5-flash",
-      "friendly_name": "Gemini (Flash 2.5)",
+      "friendly_name": "Gemini 2.5 Flash",
       "aliases": [
-        "flash",
+        "flash-2.5",
         "flash2.5"
       ],
-      "intelligence_score": 10,
-      "description": "Ultra-fast (1M context) - Quick analysis, simple queries, rapid iterations",
+      "intelligence_score": 12,
+      "description": "Gemini 2.5 Flash (1M context) - Best price-performance for low-latency, high-volume reasoning tasks.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "max_thinking_tokens": 24576,
       "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0
+    },
+    {
+      "model_name": "gemini-2.5-flash-lite",
+      "friendly_name": "Gemini 2.5 Flash Lite",
+      "aliases": [
+        "flash-lite-2.5",
+        "flashlite-2.5"
+      ],
+      "intelligence_score": 8,
+      "description": "Gemini 2.5 Flash Lite (1M context) - Fastest and most budget-friendly multimodal model in the 2.5 family.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": false,
       "supports_system_prompts": true,
       "supports_streaming": true,
       "supports_function_calling": true,
