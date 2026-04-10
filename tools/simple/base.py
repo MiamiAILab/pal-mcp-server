@@ -402,6 +402,38 @@ class SimpleTool(BaseTool):
                     logger.error("Image validation failed for %s: %s", self.get_name(), payload)
                     raise ToolExecutionError(payload)
 
+            # --- Content sensitivity gate ---
+            # Check if the prompt contains sensitive business content and the
+            # resolved model belongs to a geopolitically excluded provider.
+            # If so, swap to the default Western fallback model.
+            try:
+                from utils.content_sensitivity import get_sensitivity_service
+
+                sensitivity_service = get_sensitivity_service()
+                user_prompt_text = self.get_request_prompt(request)
+                is_sensitive, matched_keywords = sensitivity_service.is_sensitive(user_prompt_text)
+                if is_sensitive:
+                    current_provider_type = self._model_context.provider.get_provider_type()
+                    if sensitivity_service.is_provider_excluded(current_provider_type):
+                        # Find a Western fallback model
+                        from config import DEFAULT_MODEL
+
+                        fallback_model = DEFAULT_MODEL if DEFAULT_MODEL.lower() != "auto" else "gemini-2.5-flash"
+                        logger.warning(
+                            "Sensitive content detected (%s). Blocked %s via %s — falling back to %s.",
+                            ", ".join(matched_keywords[:5]),
+                            self._current_model_name,
+                            current_provider_type.value,
+                            fallback_model,
+                        )
+                        # Re-create model context with the fallback
+                        from utils.model_context import ModelContext
+
+                        self._current_model_name = fallback_model
+                        self._model_context = ModelContext(fallback_model)
+            except Exception as e:
+                logger.debug("Content sensitivity gate skipped: %s", e)
+
             # Get and validate temperature against model constraints
             temperature, temp_warnings = self.get_validated_temperature(request, self._model_context)
 
