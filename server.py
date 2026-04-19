@@ -403,6 +403,7 @@ def configure_providers():
     from providers.perplexity import PerplexityModelProvider
     from providers.mistral import MistralModelProvider
     from providers.zhipu import ZhipuModelProvider
+    from providers.alibaba import AlibabaModelProvider
     from utils.model_restrictions import get_restriction_service
 
     valid_providers = []
@@ -456,6 +457,13 @@ def configure_providers():
         valid_providers.append("Zhipu AI (GLM-4)")
         has_native_apis = True
         logger.info("Zhipu API key found - GLM-4 models available")
+
+    # Check for Alibaba DashScope API key
+    alibaba_key = get_env("DASHSCOPE_API_KEY")
+    if alibaba_key and alibaba_key != "your_dashscope_api_key_here":
+        valid_providers.append("Alibaba Model Studio (Qwen)")
+        has_native_apis = True
+        logger.info("DashScope API key found - Qwen models available")
 
     # Check for Together.ai API key
     together_key = get_env("TOGETHER_API_KEY")
@@ -524,6 +532,10 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.ZHIPU, ZhipuModelProvider)
             registered_providers.append(ProviderType.ZHIPU.value)
             logger.debug(f"Registered provider: {ProviderType.ZHIPU.value}")
+        if alibaba_key and alibaba_key != "your_dashscope_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.ALIBABA, AlibabaModelProvider)
+            registered_providers.append(ProviderType.ALIBABA.value)
+            logger.debug(f"Registered provider: {ProviderType.ALIBABA.value}")
         if together_key and together_key != "your_together_api_key_here":
             ModelProviderRegistry.register_provider(ProviderType.TOGETHER, TogetherModelProvider)
             registered_providers.append(ProviderType.TOGETHER.value)

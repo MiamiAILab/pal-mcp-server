@@ -28,6 +28,7 @@ GEOPOLITICAL_PROVIDERS: frozenset[ProviderType] = frozenset(
         ProviderType.MINIMAX,
         ProviderType.MOONSHOT,
         ProviderType.ZHIPU,
+        ProviderType.ALIBABA,  # Alibaba Model Studio (Qwen) — direct Chinese jurisdiction
         ProviderType.CUSTOM,  # DeepSeek via custom endpoint
     }
 )

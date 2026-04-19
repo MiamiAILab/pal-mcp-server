@@ -42,6 +42,7 @@ class ModelProviderRegistry:
         ProviderType.MINIMAX,  # Direct MiniMax AI access
         ProviderType.MOONSHOT,  # Direct Moonshot AI (Kimi) access
         ProviderType.ZHIPU,  # Direct Zhipu AI (GLM-4) access
+        ProviderType.ALIBABA,  # Direct Alibaba Model Studio (Qwen) access
         ProviderType.TOGETHER,  # Together.ai (Qwen3, open models)
         ProviderType.PERPLEXITY,  # Perplexity AI (Sonar search-augmented models)
         ProviderType.MISTRAL,  # Mistral AI (Mistral Large, Magistral)
@@ -325,6 +326,7 @@ class ModelProviderRegistry:
             ProviderType.MINIMAX: "MINIMAX_API_KEY",
             ProviderType.MOONSHOT: "MOONSHOT_API_KEY",
             ProviderType.ZHIPU: "ZHIPU_API_KEY",
+            ProviderType.ALIBABA: "DASHSCOPE_API_KEY",
             ProviderType.TOGETHER: "TOGETHER_API_KEY",
             ProviderType.PERPLEXITY: "PERPLEXITY_API_KEY",
             ProviderType.MISTRAL: "MISTRAL_API_KEY",

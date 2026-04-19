@@ -15,6 +15,7 @@ class ProviderType(Enum):
     MINIMAX = "minimax"
     MOONSHOT = "moonshot"
     ZHIPU = "zhipu"
+    ALIBABA = "alibaba"
     TOGETHER = "together"
     PERPLEXITY = "perplexity"
     MISTRAL = "mistral"
