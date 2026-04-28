@@ -635,7 +635,7 @@ class OpenAICompatibleProvider(ModelProvider):
             content = response.choices[0].message.content
             usage = self._extract_usage(response)
 
-            return ModelResponse(
+            model_response = ModelResponse(
                 content=content,
                 usage=usage,
                 model_name=resolved_model,
@@ -648,6 +648,14 @@ class OpenAICompatibleProvider(ModelProvider):
                     "created": response.created,
                 },
             )
+
+            # Provider-specific postprocessing hook. Default implementation is a
+            # passthrough; subclasses (e.g. PerplexityModelProvider) override this
+            # to surface extension fields (citations, grounding signals) and to
+            # validate provider-specific failure modes (e.g. Sonar fail-open).
+            # Raising from this hook triggers the existing retry loop, so a
+            # transient backend hiccup recovers without surfacing bad data.
+            return self._postprocess_response(response, model_response, resolved_model)
 
         try:
             return self._run_with_retries(
@@ -664,6 +672,33 @@ class OpenAICompatibleProvider(ModelProvider):
             )
             logging.error(error_msg)
             raise RuntimeError(error_msg) from exc
+
+    def _postprocess_response(
+        self,
+        raw_response,
+        model_response: ModelResponse,
+        resolved_model: str,
+    ) -> ModelResponse:
+        """Hook for provider-specific response postprocessing.
+
+        Default implementation is a passthrough. Override in subclasses to:
+        - Surface provider-specific extension fields (e.g. citations) into
+          ``model_response.metadata`` for callers to inspect.
+        - Validate provider-specific failure modes by raising an exception,
+          which triggers the surrounding retry loop. Raising is preferred over
+          silently substituting content because the caller can then decide how
+          to handle persistent failures (e.g. fall back to a different tool).
+
+        Args:
+            raw_response: The raw provider SDK response object.
+            model_response: The portable ``ModelResponse`` already constructed
+                from ``raw_response``. Subclasses may mutate its ``metadata``.
+            resolved_model: The canonical model name that produced the response.
+
+        Returns:
+            The (possibly mutated) ``ModelResponse`` to return to the caller.
+        """
+        return model_response
 
     def validate_parameters(self, model_name: str, temperature: float, **kwargs) -> None:
         """Validate model parameters.

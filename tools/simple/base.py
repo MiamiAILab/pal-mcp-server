@@ -658,6 +658,7 @@ class SimpleTool(BaseTool):
                         except AttributeError:
                             # Fallback if provider doesn't have get_provider_type method
                             metadata["provider_used"] = str(provider)
+                self._merge_grounding_metadata(metadata, model_info)
 
             return ToolOutput(
                 status="success",
@@ -665,6 +666,26 @@ class SimpleTool(BaseTool):
                 content_type="text",
                 metadata=metadata if metadata else None,
             )
+
+    @staticmethod
+    def _merge_grounding_metadata(metadata: dict, model_info: dict) -> None:
+        """Surface provider grounding signals (citations, etc.) into the
+        outgoing tool metadata so callers can detect degraded responses.
+
+        Currently used by Perplexity Sonar models, which expose
+        ``citations``, ``citations_count``, and ``grounding_active`` via
+        ``ModelResponse.metadata``. Other providers don't set these fields,
+        so this helper is a no-op for them.
+        """
+        model_response = model_info.get("model_response")
+        if model_response is None:
+            return
+        provider_metadata = getattr(model_response, "metadata", None)
+        if not isinstance(provider_metadata, dict):
+            return
+        for key in ("citations_count", "grounding_active", "citations"):
+            if key in provider_metadata:
+                metadata[key] = provider_metadata[key]
 
     def _create_continuation_offer(self, request, model_info: Optional[dict] = None):
         """Create continuation offer following old base.py pattern"""
@@ -754,6 +775,7 @@ class SimpleTool(BaseTool):
                         except AttributeError:
                             # Fallback if provider doesn't have get_provider_type method
                             metadata["provider_used"] = str(provider)
+                self._merge_grounding_metadata(metadata, model_info)
 
             return ToolOutput(
                 status="continuation_available",
