@@ -402,6 +402,7 @@ def configure_providers():
     from providers.together import TogetherModelProvider
     from providers.perplexity import PerplexityModelProvider
     from providers.mistral import MistralModelProvider
+    from providers.openrouter import OpenRouterProvider
     from providers.zhipu import ZhipuModelProvider
     from providers.alibaba import AlibabaModelProvider
     from utils.model_restrictions import get_restriction_service
@@ -486,6 +487,13 @@ def configure_providers():
         has_native_apis = True
         logger.info("Mistral API key found - Mistral models available")
 
+    # Check for OpenRouter API key
+    openrouter_key = get_env("OPENROUTER_API_KEY")
+    if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
+        valid_providers.append("OpenRouter (multi-model gateway)")
+        has_native_apis = True
+        logger.info("OpenRouter API key found - OpenRouter-routed models available (Llama-4-Maverick, etc.)")
+
     # Check for custom API endpoint (Ollama, vLLM, etc.)
     custom_url = get_env("CUSTOM_API_URL")
     if custom_url:
@@ -548,6 +556,10 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.MISTRAL, MistralModelProvider)
             registered_providers.append(ProviderType.MISTRAL.value)
             logger.debug(f"Registered provider: {ProviderType.MISTRAL.value}")
+        if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
+            ModelProviderRegistry.register_provider(ProviderType.OPENROUTER, OpenRouterProvider)
+            registered_providers.append(ProviderType.OPENROUTER.value)
+            logger.debug(f"Registered provider: {ProviderType.OPENROUTER.value}")
 
     # 2. Custom provider second (for local/private models)
     if has_custom:

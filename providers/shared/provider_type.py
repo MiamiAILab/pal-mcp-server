@@ -19,3 +19,4 @@ class ProviderType(Enum):
     TOGETHER = "together"
     PERPLEXITY = "perplexity"
     MISTRAL = "mistral"
+    OPENROUTER = "openrouter"
