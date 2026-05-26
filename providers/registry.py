@@ -46,6 +46,7 @@ class ModelProviderRegistry:
         ProviderType.TOGETHER,  # Together.ai (Qwen3, open models)
         ProviderType.PERPLEXITY,  # Perplexity AI (Sonar search-augmented models)
         ProviderType.MISTRAL,  # Mistral AI (Mistral Large, Magistral)
+        ProviderType.OPENROUTER,  # OpenRouter (Western multi-model gateway; Llama-4-Maverick + open Western models)
         ProviderType.CUSTOM,  # Local/self-hosted models
     ]
 
@@ -330,6 +331,7 @@ class ModelProviderRegistry:
             ProviderType.TOGETHER: "TOGETHER_API_KEY",
             ProviderType.PERPLEXITY: "PERPLEXITY_API_KEY",
             ProviderType.MISTRAL: "MISTRAL_API_KEY",
+            ProviderType.OPENROUTER: "OPENROUTER_API_KEY",
         }
 
         env_var = key_mapping.get(provider_type)
