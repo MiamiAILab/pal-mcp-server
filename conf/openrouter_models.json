@@ -194,7 +194,6 @@
       "model_name": "deepseek/deepseek-r1-0528",
       "aliases": [
         "deepseek-r1",
-        "deepseek",
         "r1",
         "deepseek-thinking"
       ],
@@ -206,6 +205,89 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "DeepSeek R1 with thinking mode - advanced reasoning capabilities (text-only)",
+      "intelligence_score": 15
+    },
+    {
+      "model_name": "deepseek/deepseek-v3.2",
+      "aliases": [
+        "deepseek-v3.2",
+        "deepseek-v3",
+        "deepseek",
+        "v3.2"
+      ],
+      "context_window": 131072,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "DeepSeek V3.2 (131K context) via OpenRouter — cost-efficient flagship for code generation and reasoning. MIA-32 Tier 2/3 Chinese-model expansion (Sonia Fork-10).",
+      "intelligence_score": 16
+    },
+    {
+      "model_name": "minimax/minimax-m2",
+      "aliases": [
+        "minimax-m2",
+        "minimax",
+        "m2"
+      ],
+      "context_window": 204800,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "MiniMax M2 (204K context) via OpenRouter — Chinese-lineage frontier model. MIA-32 Tier 2/3 (per v0.3.1 patch correction: minimax/minimax-m2, NOT m2.7).",
+      "intelligence_score": 16
+    },
+    {
+      "model_name": "z-ai/glm-4.6",
+      "aliases": [
+        "glm-4.6",
+        "glm",
+        "zhipu",
+        "glm4.6"
+      ],
+      "context_window": 202752,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "GLM-4.6 (202K context) via OpenRouter — Zhipu AI flagship reasoning model. MIA-32 Tier 2/3 Chinese-model expansion.",
+      "intelligence_score": 15
+    },
+    {
+      "model_name": "mistralai/mistral-large-2512",
+      "aliases": [
+        "mistral-large-3",
+        "mistral-large-2512",
+        "mistral-3",
+        "mistral-large-latest"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "Mistral Large 3 (Dec 2025 build, 262K context) via OpenRouter — repriced $0.50/$1.50 per Sonia 2026-05-23 verification (4x reduction). MIA-32 Tier 2 EU-lineage.",
       "intelligence_score": 15
     },
     {
