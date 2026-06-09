@@ -25,7 +25,12 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             model_name="Qwen/Qwen3.5-397B-A17B",
             friendly_name="Together AI (Qwen3.5 397B)",
             context_window=262_144,
-            max_output_tokens=16384,
+            # Reasoning model: emits a hidden <think> trace before its final
+            # answer. At 16384 it exhausted the budget mid-trace and returned
+            # finish_reason=length with empty visible content (silent empty
+            # verdicts in consensus). Raised to 65536 so the trace + final
+            # answer both fit. Genesis fix 2026-05-30 (SOL-338 adjacent).
+            max_output_tokens=65536,
             supports_extended_thinking=True,
             supports_system_prompts=True,
             supports_streaming=True,
