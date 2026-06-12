@@ -106,6 +106,15 @@ class ListModelsTool(BaseTool):
             ProviderType.TOGETHER: {"name": "Together AI", "env_key": "TOGETHER_API_KEY"},
             ProviderType.PERPLEXITY: {"name": "Perplexity AI", "env_key": "PERPLEXITY_API_KEY"},
             ProviderType.MISTRAL: {"name": "Mistral AI", "env_key": "MISTRAL_API_KEY"},
+            # OpenRouter is an aggregator, not a native single-vendor provider, so it
+            # was historically omitted from this display map even though PR #2 wires it
+            # into the registry. That omission made listmodels report OpenRouter as
+            # "Not configured" while the provider was actually live — a verification-layer
+            # footgun (CASE-008 family: a check reading the wrong predicate). Keying the
+            # section off the provider registry (get_provider/get_capabilities_by_rank,
+            # below) — not a hardcoded vendor list — keeps the display honest as the
+            # registry changes. Genesis fix 2026-06-12 (SOL-433).
+            ProviderType.OPENROUTER: {"name": "OpenRouter", "env_key": "OPENROUTER_API_KEY"},
         }
 
         def format_model_entry(provider, display_name: str) -> list[str]:

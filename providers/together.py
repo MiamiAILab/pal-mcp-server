@@ -25,7 +25,12 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             model_name="Qwen/Qwen3.5-397B-A17B",
             friendly_name="Together AI (Qwen3.5 397B)",
             context_window=262_144,
-            max_output_tokens=16384,
+            # Reasoning model: emits a hidden <think> trace before its final
+            # answer. At 16384 it exhausted the budget mid-trace and returned
+            # finish_reason=length with empty visible content (silent empty
+            # verdicts in consensus). Raised to 65536 so the trace + final
+            # answer both fit. Genesis fix 2026-05-30 (SOL-338 adjacent).
+            max_output_tokens=65536,
             supports_extended_thinking=True,
             supports_system_prompts=True,
             supports_streaming=True,
@@ -117,44 +122,6 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             aliases=["qwen3-instruct", "qwen3-235b-instruct"],
             intelligence_score=17,
         ),
-        "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": ModelCapabilities(
-            provider=ProviderType.TOGETHER,
-            model_name="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-            friendly_name="Together AI (Llama 4 Maverick)",
-            context_window=1_048_576,
-            max_output_tokens=16384,
-            supports_extended_thinking=False,
-            supports_system_prompts=True,
-            supports_streaming=True,
-            supports_function_calling=True,
-            supports_json_mode=True,
-            supports_images=True,
-            max_image_size_mb=20.0,
-            supports_temperature=True,
-            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Llama 4 Maverick (1M context) - 128-expert MoE model with 17B active/400B total params, multimodal",
-            aliases=["llama4-maverick", "llama-4-maverick", "maverick"],
-            intelligence_score=16,
-        ),
-        "meta-llama/Llama-4-Scout-17B-16E-Instruct": ModelCapabilities(
-            provider=ProviderType.TOGETHER,
-            model_name="meta-llama/Llama-4-Scout-17B-16E-Instruct",
-            friendly_name="Together AI (Llama 4 Scout)",
-            context_window=262_144,
-            max_output_tokens=16384,
-            supports_extended_thinking=False,
-            supports_system_prompts=True,
-            supports_streaming=True,
-            supports_function_calling=True,
-            supports_json_mode=True,
-            supports_images=True,
-            max_image_size_mb=20.0,
-            supports_temperature=True,
-            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Llama 4 Scout (256K context) - 16-expert MoE model with 17B active/109B total params, multimodal",
-            aliases=["llama4-scout", "llama-4-scout", "scout", "llama4"],
-            intelligence_score=14,
-        ),
     }
 
     def __init__(self, api_key: str, **kwargs):
@@ -174,6 +141,4 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
             "Qwen/Qwen3-Coder-Next-FP8",
             "Qwen/Qwen3-Next-80B-A3B-Thinking",
-            "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-            "meta-llama/Llama-4-Scout-17B-16E-Instruct",
         )
