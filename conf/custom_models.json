@@ -28,14 +28,15 @@
         "r1"
       ],
       "context_window": 128000,
-      "max_output_tokens": 8192,
+      "max_output_tokens": 64000,
       "supports_extended_thinking": true,
-      "supports_json_mode": false,
-      "supports_function_calling": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
       "supports_images": false,
       "max_image_size_mb": 0.0,
-      "description": "DeepSeek-R1 reasoning model via DeepSeek API - 64K context, extended thinking with chain-of-thought",
-      "intelligence_score": 14
+      "supports_temperature": true,
+      "description": "DeepSeek V3.2 reasoning model via DeepSeek API - 128K context, 64K output, extended thinking with tool calls",
+      "intelligence_score": 15
     },
     {
       "model_name": "deepseek-chat",

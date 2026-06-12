@@ -658,11 +658,46 @@ of the evidence, even when it strongly points in one direction.""",
                 images=request.images if request.images else None,
             )
 
+            # Empty-verdict guard (Genesis fix 2026-05-30, SOL-338 adjacent).
+            # A reasoning model can exhaust its output budget inside its hidden
+            # <think> trace and return finish_reason=length with empty visible
+            # content. Without this guard that surfaces as a silent ""
+            # verdict with status "success" — a dropped vote that degrades the
+            # cross-family consensus control primitive without erroring loudly.
+            # Treat empty/truncated output as a non-vote, never a silent "".
+            verdict_text = (response.content or "").strip()
+            finish_reason = (response.metadata or {}).get("finish_reason")
+            if not verdict_text or finish_reason == "length":
+                logger.warning(
+                    "Consensus: model %s returned no usable verdict "
+                    "(finish_reason=%s, content_len=%d) — counted as non-vote.",
+                    model_name,
+                    finish_reason,
+                    len(response.content or ""),
+                )
+                return {
+                    "model": model_name,
+                    "stance": stance,
+                    "status": "error",
+                    "error": (
+                        "Empty or truncated verdict "
+                        f"(finish_reason={finish_reason}). Model produced no "
+                        "usable output — likely exhausted output budget inside "
+                        "its reasoning trace. Counted as a non-vote, not a "
+                        "silent empty verdict."
+                    ),
+                    "metadata": {
+                        "provider": provider.get_provider_type().value,
+                        "model_name": model_name,
+                        "finish_reason": finish_reason,
+                    },
+                }
+
             return {
                 "model": model_name,
                 "stance": stance,
                 "status": "success",
-                "verdict": response.content,
+                "verdict": verdict_text,
                 "metadata": {
                     "provider": provider.get_provider_type().value,
                     "model_name": model_name,
