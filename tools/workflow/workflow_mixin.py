@@ -20,6 +20,7 @@ Features:
 - Comprehensive type annotations for IDE support
 """
 
+from utils.provider_timeout import generate_content_with_timeout
 import json
 import logging
 import os
@@ -1519,7 +1520,7 @@ class BaseWorkflowMixin(ABC):
                 logger.warning(warning)
 
             # Generate AI response - use request parameters if available
-            model_response = provider.generate_content(
+            model_response = await generate_content_with_timeout(provider,
                 prompt=prompt,
                 model_name=model_name,
                 system_prompt=system_prompt,

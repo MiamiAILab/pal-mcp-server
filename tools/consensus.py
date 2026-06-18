@@ -15,6 +15,7 @@ Key features:
 
 from __future__ import annotations
 
+from utils.provider_timeout import generate_content_with_timeout
 import json
 import logging
 from typing import TYPE_CHECKING, Any
@@ -649,7 +650,7 @@ of the evidence, even when it strongly points in one direction.""",
                 logger.warning(warning)
 
             # Call the model with validated temperature
-            response = provider.generate_content(
+            response = await generate_content_with_timeout(provider,
                 prompt=prompt,
                 model_name=model_name,
                 system_prompt=system_prompt,
