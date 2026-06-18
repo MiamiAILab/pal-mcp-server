@@ -46,6 +46,67 @@ DEFAULT_TIMEOUT_SECS = 150
 _ENV_TIMEOUT = "ZEN_PROVIDER_TIMEOUT_SECS"
 _MAX_WORKERS = max(8, int(os.getenv("ZEN_PROVIDER_MAX_WORKERS", "200")))
 
+# --- Layer 3: native transport timeout knob ------------------------------------
+# The TRUE reap. Layer 2 (above) frees the awaiting caller but CANNOT cancel the
+# blocking socket read inside the worker thread — that thread + its FD leak until
+# the SDK returns or the OS TCP timeout (~15-30 min). Layer 3 sets an explicit
+# read/transport timeout on each provider's underlying HTTP client so a hung
+# socket actually RAISES at the transport layer in ~seconds, the worker thread
+# unwinds, and the FD closes.
+#
+# ORDERING (ratified via cross-family review, gpt-5.4 2026-06-18): the transport
+# timeout is the PRIMARY reaper and must fire BEFORE the Layer-2 wait_for outer
+# bound — otherwise wait_for fires first and we are back to leaking the thread.
+# Hence the default (120s) is deliberately BELOW DEFAULT_TIMEOUT_SECS (150s):
+#   transport read timeout (120s)  -> reaps the socket, unwinds the thread
+#   Layer-2 wait_for      (150s)   -> secondary caller-protection guardrail
+# Provider-specific CUSTOM_*_TIMEOUT envs still take precedence over this knob.
+DEFAULT_TRANSPORT_TIMEOUT_SECS = 120
+_ENV_TRANSPORT_TIMEOUT = "ZEN_PROVIDER_TRANSPORT_TIMEOUT_SECS"
+
+
+def resolve_transport_timeout_secs(default=DEFAULT_TRANSPORT_TIMEOUT_SECS):
+    """Resolve the per-provider native transport (read) timeout in SECONDS.
+
+    Reads ZEN_PROVIDER_TRANSPORT_TIMEOUT_SECS; falls back to `default`
+    (120s). Returns a positive float, or None if the operator set the value
+    to <=0 (kill-switch -> let the provider client use its own default /
+    unbounded behavior, matching the Layer-2 <=0 kill-switch convention).
+
+    NOTE: this returns SECONDS. The Gemini SDK (google-genai) expects
+    milliseconds on HttpOptions.timeout — callers there must multiply by 1000.
+    The OpenAI-compatible httpx path uses seconds directly.
+    """
+    raw = os.getenv(_ENV_TRANSPORT_TIMEOUT)
+    if raw is None:
+        val = float(default)
+    else:
+        try:
+            val = float(raw)
+        except (TypeError, ValueError):
+            logger.warning(
+                "%s=%r is not a number; using default %ss",
+                _ENV_TRANSPORT_TIMEOUT, raw, default,
+            )
+            val = float(default)
+    if val <= 0:
+        return None  # kill-switch: defer to the SDK/client default
+    # Soft guard: warn if transport >= the Layer-2 outer bound, which weakens
+    # the reap (Layer 2 would fire first and leak the worker thread).
+    outer_raw = os.getenv(_ENV_TIMEOUT)
+    try:
+        outer = float(outer_raw) if outer_raw is not None else DEFAULT_TIMEOUT_SECS
+    except (TypeError, ValueError):
+        outer = DEFAULT_TIMEOUT_SECS
+    if outer > 0 and val >= outer:
+        logger.warning(
+            "%s (%ss) >= %s (%ss): the transport timeout will not act as the "
+            "primary socket reaper; the Layer-2 wait_for may fire first and leak "
+            "the worker thread. Set transport below the outer bound.",
+            _ENV_TRANSPORT_TIMEOUT, val, _ENV_TIMEOUT, outer,
+        )
+    return val
+
 # Dedicated pool: isolates blocking provider calls from asyncio's default
 # executor so a hang-storm cannot starve unrelated to_thread work. Per /pareto.
 _PROVIDER_EXECUTOR = ThreadPoolExecutor(

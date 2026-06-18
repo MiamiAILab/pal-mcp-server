@@ -49,7 +49,7 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
         self._client = None
         self._token_counters = {}  # Cache for token counting
         self._base_url = kwargs.get("base_url", None)  # Optional custom endpoint
-        self._timeout_override = self._resolve_http_timeout()
+        self._timeout_override_ms = self._resolve_http_timeout_ms()
         self._invalidate_capability_cache()
 
     # ------------------------------------------------------------------
@@ -67,13 +67,14 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
             http_options_kwargs: dict[str, object] = {}
             if self._base_url:
                 http_options_kwargs["base_url"] = self._base_url
-            if self._timeout_override is not None:
-                http_options_kwargs["timeout"] = self._timeout_override
+            if self._timeout_override_ms is not None:
+                # google-genai HttpOptions.timeout is in MILLISECONDS (Optional[int]).
+                http_options_kwargs["timeout"] = self._timeout_override_ms
 
             if http_options_kwargs:
                 http_options = types.HttpOptions(**http_options_kwargs)
                 logger.debug(
-                    "Initializing Gemini client with options: base_url=%s timeout=%s",
+                    "Initializing Gemini client with options: base_url=%s timeout=%sms",
                     http_options_kwargs.get("base_url"),
                     http_options_kwargs.get("timeout"),
                 )
@@ -82,10 +83,30 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
                 self._client = genai.Client(api_key=self.api_key)
         return self._client
 
-    def _resolve_http_timeout(self) -> Optional[float]:
-        """Compute timeout override from shared custom timeout environment variables."""
+    def _resolve_http_timeout_ms(self) -> Optional[int]:
+        """Compute the Gemini HTTP request timeout, in MILLISECONDS.
 
-        timeouts: list[float] = []
+        google-genai's types.HttpOptions.timeout is an Optional[int] expressed in
+        MILLISECONDS. The previous implementation returned float SECONDS and passed
+        them straight through, so e.g. CUSTOM_READ_TIMEOUT=600 was interpreted as
+        600 ms = 0.6 s — a latent unit bug. This returns milliseconds.
+
+        Layer 3 (zen-hang durable fix, 2026-06-18): previously this returned None
+        unless a CUSTOM_*_TIMEOUT env was set, leaving the Gemini client with NO
+        timeout by default — so a hung Gemini socket leaked its worker thread + FD
+        indefinitely. We now default to the unified ZEN_PROVIDER_TRANSPORT_TIMEOUT_SECS
+        knob (default 120s, BELOW the Layer-2 150s outer bound so transport reaps
+        first). Explicit CUSTOM_*_TIMEOUT envs (seconds) still take precedence.
+
+        NOTE: the google-genai SDK treats this as a request-level timeout; its exact
+        semantics may differ slightly from httpx's per-read timeout used on the
+        OpenAI-compatible path. Bounded-by-an-imperfect-knob beats unbounded.
+        """
+        from utils.provider_timeout import resolve_transport_timeout_secs
+
+        # Precedence 1: explicit CUSTOM_*_TIMEOUT envs (seconds). Use the largest to
+        # best approximate long-running requests, matching prior behavior.
+        timeouts_secs: list[float] = []
         for env_var in [
             "CUSTOM_CONNECT_TIMEOUT",
             "CUSTOM_READ_TIMEOUT",
@@ -95,15 +116,20 @@ class GeminiModelProvider(RegistryBackedProviderMixin, ModelProvider):
             raw_value = get_env(env_var)
             if raw_value:
                 try:
-                    timeouts.append(float(raw_value))
+                    timeouts_secs.append(float(raw_value))
                 except (TypeError, ValueError):
                     logger.warning("Invalid %s value '%s'; ignoring.", env_var, raw_value)
 
-        if timeouts:
-            # Use the largest timeout to best approximate long-running requests
-            resolved = max(timeouts)
-            logger.debug("Using custom Gemini HTTP timeout: %ss", resolved)
-            return resolved
+        if timeouts_secs:
+            resolved_secs = max(timeouts_secs)
+            logger.debug("Using custom Gemini HTTP timeout: %ss", resolved_secs)
+            return int(resolved_secs * 1000)
+
+        # Precedence 2: unified transport knob (seconds -> ms). None = kill-switch.
+        transport_secs = resolve_transport_timeout_secs()
+        if transport_secs is not None:
+            logger.debug("Using unified Gemini HTTP transport timeout: %ss", transport_secs)
+            return int(transport_secs * 1000)
 
         return None
 
