@@ -12,6 +12,7 @@ and inherit all the conversation, file processing, and model handling
 capabilities from BaseTool.
 """
 
+from utils.provider_timeout import generate_content_with_timeout
 from abc import abstractmethod
 from typing import Any, Optional
 
@@ -473,7 +474,7 @@ class SimpleTool(BaseTool):
             supports_thinking = capabilities.supports_extended_thinking
 
             # Generate content with provider abstraction
-            model_response = provider.generate_content(
+            model_response = await generate_content_with_timeout(provider,
                 prompt=prompt,
                 model_name=self._current_model_name,
                 system_prompt=system_prompt,
@@ -530,7 +531,7 @@ class SimpleTool(BaseTool):
                         retry_prompt = f"{original_prompt}\n\nIMPORTANT: Please provide a substantive response. If you cannot respond to the above request, please explain why and suggest alternatives."
 
                         try:
-                            retry_response = provider.generate_content(
+                            retry_response = await generate_content_with_timeout(provider,
                                 prompt=retry_prompt,
                                 model_name=self._current_model_name,
                                 system_prompt=system_prompt,

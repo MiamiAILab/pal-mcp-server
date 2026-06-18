@@ -144,25 +144,48 @@ class OpenAICompatibleProvider(ModelProvider):
         """
         import httpx
 
-        # Default timeouts - more generous for custom/local endpoints
-        default_connect = 30.0  # 30 seconds for connection (vs OpenAI's 5s)
-        default_read = 600.0  # 10 minutes for reading (same as OpenAI default)
-        default_write = 600.0  # 10 minutes for writing
-        default_pool = 600.0  # 10 minutes for pool
+        from utils.provider_timeout import resolve_transport_timeout_secs
 
-        # For custom/local URLs, use even longer timeouts
+        # Layer 3 (zen-hang durable fix, 2026-06-18): the read/write/pool defaults
+        # used to be 600s (cloud) / 900s (custom) / 1800s (localhost). Those are
+        # FAR longer than the Layer-2 wait_for outer bound (150s), so a hung socket
+        # would leak its worker thread + FD for ~10-30 min before the transport
+        # ever raised. We now derive the read/write/pool default from the unified
+        # ZEN_PROVIDER_TRANSPORT_TIMEOUT_SECS knob (default 120s, deliberately BELOW
+        # the Layer-2 bound so the transport reaps the socket FIRST). The per-field
+        # CUSTOM_*_TIMEOUT env overrides below still win, so operators who genuinely
+        # need multi-minute reads can restore them explicitly.
+        transport_secs = resolve_transport_timeout_secs()
+        # Kill-switch (<=0): fall back to the legacy generous read budget so the
+        # client is never effectively unbounded by accident.
+        base_read = float(transport_secs) if transport_secs is not None else 600.0
+
+        # Default timeouts.
+        default_connect = 30.0  # 30 seconds for connection (vs OpenAI's 5s)
+        default_read = base_read
+        default_write = base_read
+        default_pool = base_read
+
+        # Custom/local endpoints (slower local inference, extended thinking) get a
+        # bounded multiple of the unified knob — NOT the old fixed 900/1800 — so
+        # they remain hang-reapable while tolerating slower first-byte latency.
         if self.base_url and self._is_localhost_url():
             default_connect = 60.0  # 1 minute for local connections
-            default_read = 1800.0  # 30 minutes for local models (extended thinking)
-            default_write = 1800.0  # 30 minutes for local models
-            default_pool = 1800.0  # 30 minutes for local models
-            logging.info(f"Using extended timeouts for local endpoint: {self.base_url}")
+            local_read = base_read * 4 if transport_secs is not None else 1800.0
+            default_read = local_read
+            default_write = local_read
+            default_pool = local_read
+            logging.info(f"Using extended (local) timeouts for endpoint: {self.base_url} (read={local_read}s)")
         elif self.base_url:
             default_connect = 45.0  # 45 seconds for custom remote endpoints
-            default_read = 900.0  # 15 minutes for custom remote endpoints
-            default_write = 900.0  # 15 minutes for custom remote endpoints
-            default_pool = 900.0  # 15 minutes for custom remote endpoints
-            logging.info(f"Using extended timeouts for custom endpoint: {self.base_url}")
+            custom_read = base_read * 2 if transport_secs is not None else 900.0
+            default_read = custom_read
+            default_write = custom_read
+            default_pool = custom_read
+            logging.info(f"Using extended (custom) timeouts for endpoint: {self.base_url} (read={custom_read}s)")
+
+        # Connect should never exceed read.
+        default_connect = min(default_connect, default_read)
 
         # Allow override via kwargs or environment variables in future, for now...
         connect_timeout = kwargs.get("connect_timeout")

@@ -20,6 +20,7 @@ Features:
 - Comprehensive type annotations for IDE support
 """
 
+from utils.provider_timeout import generate_content_with_timeout
 import json
 import logging
 import os
@@ -71,6 +72,27 @@ class BaseWorkflowMixin(ABC):
         self.work_history: list[dict[str, Any]] = []
         self.consolidated_findings: ConsolidatedFindings = ConsolidatedFindings()
         self.initial_request: Optional[str] = None
+
+    def _reset_workflow_state(self) -> None:
+        """Reset per-request workflow accumulators on this (singleton) tool instance.
+
+        CRITICAL ISOLATION FIX (Genesis / SOL-338, 2026-06-15): tools are registered
+        in server.py as process-global SINGLETON instances (TOOLS = {"thinkdeep":
+        ThinkDeepTool(), ...}). The same instance handles every MCP call in the
+        process's lifetime. Without an explicit reset at the top of each invocation,
+        work_history / consolidated_findings / initial_request retain the PRIOR
+        run's data — so a new workflow started with a FRESH continuation_id (or no
+        continuation_id) appends onto the previous agent's findings, leaking
+        unrelated content into the response. This is the "fresh continuation_id is
+        necessary but insufficient" cross-run contamination. Legitimate continuations
+        re-restore state from the stored thread immediately after this reset.
+        """
+        self.work_history = []
+        self.consolidated_findings = ConsolidatedFindings()
+        self.initial_request = None
+        # Subclass-specific per-request state (e.g. debug/consensus store_initial_issue)
+        if hasattr(self, "initial_issue"):
+            self.initial_issue = None
 
     # ================================================================================
     # Abstract Methods - Required Implementation by BaseTool or Subclasses
@@ -614,6 +636,14 @@ class BaseWorkflowMixin(ABC):
         from mcp.types import TextContent
 
         try:
+            # Reset per-request accumulators FIRST. Tools are process-global
+            # singletons (see server.py TOOLS); without this, a new workflow run
+            # inherits the prior run's work_history/consolidated_findings and leaks
+            # unrelated content. Legitimate continuations re-restore from the stored
+            # thread below (search "Restore workflow state on continuation").
+            # Genesis / SOL-338 cross-run contamination fix, 2026-06-15.
+            self._reset_workflow_state()
+
             # Store arguments for access by helper methods
             self._current_arguments = arguments
 
@@ -1490,7 +1520,7 @@ class BaseWorkflowMixin(ABC):
                 logger.warning(warning)
 
             # Generate AI response - use request parameters if available
-            model_response = provider.generate_content(
+            model_response = await generate_content_with_timeout(provider,
                 prompt=prompt,
                 model_name=model_name,
                 system_prompt=system_prompt,
