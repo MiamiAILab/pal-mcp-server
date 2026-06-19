@@ -25,6 +25,8 @@ import logging
 import os
 import re
 from abc import ABC, abstractmethod
+
+from utils.provider_timeout import generate_content_with_timeout  # SOL-338 Layer 2 inner
 from typing import Any, Optional
 
 from mcp.types import TextContent
@@ -1518,8 +1520,11 @@ class BaseWorkflowMixin(ABC):
             for warning in temp_warnings:
                 logger.warning(warning)
 
-            # Generate AI response - use request parameters if available
-            model_response = provider.generate_content(
+            # Generate AI response - use request parameters if available.
+            # SOL-338 Layer 2 inner: bounded so a hang raises ProviderTimeoutError
+            # and the existing fallback chain fires instead of hanging forever.
+            model_response = await generate_content_with_timeout(
+                provider,
                 prompt=prompt,
                 model_name=model_name,
                 system_prompt=system_prompt,

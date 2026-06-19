@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import json
 import logging
+
+from utils.provider_timeout import generate_content_with_timeout
 from typing import TYPE_CHECKING, Any
 
 from pydantic import Field, model_validator
@@ -648,8 +650,11 @@ of the evidence, even when it strongly points in one direction.""",
             for warning in temp_warnings:
                 logger.warning(warning)
 
-            # Call the model with validated temperature
-            response = provider.generate_content(
+            # Call the model with validated temperature.
+            # SOL-338 Layer 2 inner: bound the blocking call so a hang raises
+            # ProviderTimeoutError and the existing fallback chain fires.
+            response = await generate_content_with_timeout(
+                provider,
                 prompt=prompt,
                 model_name=model_name,
                 system_prompt=system_prompt,

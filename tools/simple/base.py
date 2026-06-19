@@ -15,6 +15,8 @@ capabilities from BaseTool.
 from abc import abstractmethod
 from typing import Any, Optional
 
+from utils.provider_timeout import generate_content_with_timeout
+
 from tools.shared.base_models import ToolRequest
 from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
@@ -472,8 +474,10 @@ class SimpleTool(BaseTool):
             # Resolve model capabilities for feature gating
             supports_thinking = capabilities.supports_extended_thinking
 
-            # Generate content with provider abstraction
-            model_response = provider.generate_content(
+            # Generate content with provider abstraction.
+            # SOL-338 Layer 2 inner: bounded so a hang raises ProviderTimeoutError.
+            model_response = await generate_content_with_timeout(
+                provider,
                 prompt=prompt,
                 model_name=self._current_model_name,
                 system_prompt=system_prompt,
@@ -530,7 +534,9 @@ class SimpleTool(BaseTool):
                         retry_prompt = f"{original_prompt}\n\nIMPORTANT: Please provide a substantive response. If you cannot respond to the above request, please explain why and suggest alternatives."
 
                         try:
-                            retry_response = provider.generate_content(
+                            # SOL-338 Layer 2 inner: bounded retry call.
+                            retry_response = await generate_content_with_timeout(
+                                provider,
                                 prompt=retry_prompt,
                                 model_name=self._current_model_name,
                                 system_prompt=system_prompt,
