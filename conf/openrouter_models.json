@@ -39,7 +39,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "Claude Opus 4.8 (1M context) - Anthropic's most capable Opus model for long-horizon agentic work, multi-step reasoning, and complex coding. Bumped 2026-06-12 (Genesis, SOL-433); `opus` alias now resolves here for the cross-family consensus opus seat (served via OpenRouter — no ANTHROPIC_API_KEY per fleet billing rule).",
+      "description": "Claude Opus 4.8 (1M context) - Anthropic's most capable Opus model for long-horizon agentic work, multi-step reasoning, and complex coding. Bumped 2026-06-12 (Genesis, SOL-433); `opus` alias resolves here for the cross-family consensus opus seat. Served via OpenRouter because zen has no native Anthropic provider — SOL-433 wired OpenRouter so this seat works at all (infra repair, NOT a billing rule). Corrected 2026-06-27 (GENESIS-096): the prior 'no ANTHROPIC_API_KEY per fleet billing rule' gloss was wrong — an ANTHROPIC_API_KEY does exist in Doppler but is reserved for the separate `claude -p` autonomous runtime (PR #104) and does not apply to zen consensus routing. Keeping OpenRouter is deliberate: Anthropic's API is not OpenAI-compatible (a native provider is real new code/dependency), and OpenRouter passes Anthropic list pricing through at a negligible (~5% credit-fee) premium.",
       "intelligence_score": 19
     },
     {
@@ -229,7 +229,8 @@
         "deepseek-v3.2",
         "deepseek-v3",
         "deepseek",
-        "v3.2"
+        "v3.2",
+        "deepseek-reasoner"
       ],
       "context_window": 131072,
       "max_output_tokens": 32768,
