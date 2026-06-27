@@ -84,25 +84,13 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             intelligence_score=19,
             allow_code_generation=True,
         ),
-        "Qwen/Qwen3-Next-80B-A3B-Thinking": ModelCapabilities(
-            provider=ProviderType.TOGETHER,
-            model_name="Qwen/Qwen3-Next-80B-A3B-Thinking",
-            friendly_name="Together AI (Qwen3 Next 80B Thinking)",
-            context_window=262_144,
-            max_output_tokens=16384,
-            supports_extended_thinking=True,
-            supports_system_prompts=True,
-            supports_streaming=True,
-            supports_function_calling=True,
-            supports_json_mode=True,
-            supports_images=False,
-            max_image_size_mb=0.0,
-            supports_temperature=True,
-            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Qwen3 Next 80B Thinking (256K context) - Efficient MoE thinking model with only 3B active params",
-            aliases=["qwen3-next", "qwen3-80b", "qwen-next"],
-            intelligence_score=15,
-        ),
+        # Removed 2026-06-27 (GENESIS-096): "Qwen/Qwen3-Next-80B-A3B-Thinking"
+        # is listed in the Together catalog but is NON-SERVERLESS (probed: HTTP
+        # 400 "Unable to access non-serverless model ... create a dedicated
+        # endpoint"). It cannot be invoked on the shared serverless path consensus
+        # uses. Removed rather than repointed — provisioning a paid dedicated
+        # endpoint is a cost decision for Mario; the serverless Qwen/Qwen3.5-397B-
+        # A17B (qwen3.5-397b) already covers the Qwen thinking seat.
         "Qwen/Qwen3-235B-A22B-Instruct-2507-tput": ModelCapabilities(
             provider=ProviderType.TOGETHER,
             model_name="Qwen/Qwen3-235B-A22B-Instruct-2507-tput",
@@ -140,5 +128,4 @@ class TogetherModelProvider(OpenAICompatibleProvider):
             "Qwen/Qwen3.5-397B-A17B",
             "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
             "Qwen/Qwen3-Coder-Next-FP8",
-            "Qwen/Qwen3-Next-80B-A3B-Thinking",
         )
