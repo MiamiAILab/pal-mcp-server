@@ -649,19 +649,34 @@ class OpenAICompatibleProvider(ModelProvider):
         # Resolve the effective output-token cap. When the caller does not pass an
         # explicit max_output_tokens, fall back to the model's configured
         # capabilities.max_output_tokens. This is CRITICAL for reasoning/thinking
-        # models: they spend output budget inside a hidden reasoning trace before
-        # emitting the visible answer. With no max_tokens on the request, the
-        # provider applies its own (often tiny) server-side default — Together AI
-        # defaults to 2048 — which truncates mid-trace and yields
-        # finish_reason=length with empty/partial visible content (a silent
-        # non-vote in consensus). The per-model max_output_tokens in
-        # MODEL_CAPABILITIES was previously dead code on the request path; this
-        # wires it through so the configured ceiling actually takes effect.
-        # Class-level fix covering all OpenAI-compatible providers (Together,
-        # Moonshot, Mistral, MiniMax, DeepSeek/custom, OpenRouter).
+        # models on third-party proxy providers: they spend output budget inside a
+        # hidden reasoning trace before emitting the visible answer. With no
+        # max_tokens on the request, the provider applies its own (often tiny)
+        # server-side default — Together AI defaults to 2048 — which truncates
+        # mid-trace and yields finish_reason=length with empty/partial visible
+        # content (a silent non-vote in consensus). The per-model
+        # max_output_tokens in MODEL_CAPABILITIES was previously dead code on the
+        # request path; this wires it through so the configured ceiling takes
+        # effect.
+        #
+        # SCOPED to proxy providers only (Together, Moonshot, Mistral, MiniMax,
+        # DeepSeek/custom, OpenRouter) — the native GOOGLE and OPENAI providers
+        # are EXCLUDED, matching the existing native/proxy split at
+        # get_provider_type() above. Rationale (Genesis smoke test 2026-06-27):
+        # OpenAI gpt-5.x supports sampling (so the supports_sampling gate does
+        # NOT exclude it) but rejects `max_tokens` outright — it requires
+        # `max_completion_tokens` ("Unsupported parameter: 'max_tokens' ...").
+        # An unconditional class-level fallback therefore REGRESSED gpt-5.4 from
+        # working (consensus passes no cap -> no max_tokens) to a hard 400. Native
+        # providers manage their own server-side defaults and param naming, so
+        # they don't need (and break under) this fallback.
         # Genesis fix 2026-06-27 (GENESIS-096).
         effective_max_output_tokens = max_output_tokens
-        if effective_max_output_tokens is None and capabilities is not None:
+        if (
+            effective_max_output_tokens is None
+            and capabilities is not None
+            and self.get_provider_type() not in [ProviderType.GOOGLE, ProviderType.OPENAI]
+        ):
             configured_cap = getattr(capabilities, "max_output_tokens", 0) or 0
             if configured_cap > 0:
                 effective_max_output_tokens = configured_cap
