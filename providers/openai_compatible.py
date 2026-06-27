@@ -512,6 +512,42 @@ class OpenAICompatibleProvider(ModelProvider):
             logging.error(error_msg)
             raise RuntimeError(error_msg) from exc
 
+    @staticmethod
+    def _normalize_message_content(content) -> Optional[str]:
+        """Normalize a chat-completion message.content into a plain string.
+
+        Most OpenAI-compatible providers return message.content as a string.
+        Some reasoning/thinking models (e.g. Mistral magistral) instead return a
+        LIST of structured content blocks, mixing the hidden reasoning trace with
+        the visible answer, e.g.:
+            [{"type": "thinking", "thinking": [{"type": "text", "text": "..."}]},
+             {"type": "text", "text": "the actual answer"}]
+        Downstream code (and the consensus empty-verdict guard) calls .strip() on
+        content and assumes a string, so a list crashes with AttributeError and
+        the model becomes a guaranteed non-vote. This extracts the VISIBLE answer
+        text (type == "text") and drops the reasoning-trace blocks. If only trace
+        blocks are present (e.g. truncated mid-thought) it returns "" so the
+        empty/truncated-verdict guard fires loudly rather than silently. Genesis
+        fix 2026-06-27 (GENESIS-096).
+        """
+        if content is None or isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            parts: list[str] = []
+            for block in content:
+                if not isinstance(block, dict):
+                    # Fallback for SDK objects exposing .type/.text attributes.
+                    btype = getattr(block, "type", None)
+                    btext = getattr(block, "text", None)
+                    if btype == "text" and isinstance(btext, str):
+                        parts.append(btext)
+                    continue
+                if block.get("type") == "text" and isinstance(block.get("text"), str):
+                    parts.append(block["text"])
+            return "".join(parts)
+        # Unknown shape — stringify defensively so callers never crash.
+        return str(content)
+
     def generate_content(
         self,
         prompt: str,
@@ -610,10 +646,30 @@ class OpenAICompatibleProvider(ModelProvider):
         if supports_sampling:
             completion_params["temperature"] = effective_temperature
 
+        # Resolve the effective output-token cap. When the caller does not pass an
+        # explicit max_output_tokens, fall back to the model's configured
+        # capabilities.max_output_tokens. This is CRITICAL for reasoning/thinking
+        # models: they spend output budget inside a hidden reasoning trace before
+        # emitting the visible answer. With no max_tokens on the request, the
+        # provider applies its own (often tiny) server-side default — Together AI
+        # defaults to 2048 — which truncates mid-trace and yields
+        # finish_reason=length with empty/partial visible content (a silent
+        # non-vote in consensus). The per-model max_output_tokens in
+        # MODEL_CAPABILITIES was previously dead code on the request path; this
+        # wires it through so the configured ceiling actually takes effect.
+        # Class-level fix covering all OpenAI-compatible providers (Together,
+        # Moonshot, Mistral, MiniMax, DeepSeek/custom, OpenRouter).
+        # Genesis fix 2026-06-27 (GENESIS-096).
+        effective_max_output_tokens = max_output_tokens
+        if effective_max_output_tokens is None and capabilities is not None:
+            configured_cap = getattr(capabilities, "max_output_tokens", 0) or 0
+            if configured_cap > 0:
+                effective_max_output_tokens = configured_cap
+
         # Add max tokens if specified and model supports it
         # O3/O4 models that don't support temperature also don't support max_tokens
-        if max_output_tokens and supports_sampling:
-            completion_params["max_tokens"] = max_output_tokens
+        if effective_max_output_tokens and supports_sampling:
+            completion_params["max_tokens"] = effective_max_output_tokens
 
         # Add any additional OpenAI-specific parameters
         # Use capabilities to filter parameters for reasoning models
@@ -655,7 +711,7 @@ class OpenAICompatibleProvider(ModelProvider):
             attempt_counter["value"] += 1
             response = self.client.chat.completions.create(**completion_params)
 
-            content = response.choices[0].message.content
+            content = self._normalize_message_content(response.choices[0].message.content)
             usage = self._extract_usage(response)
 
             model_response = ModelResponse(
