@@ -153,10 +153,10 @@ class ZhipuModelProvider(OpenAICompatibleProvider):
             aliases=["glm47-flash", "zhipu-flash-4.7"],
             intelligence_score=14,
         ),
-        "glm-4.6": ModelCapabilities(
+        "glm-4.6-direct": ModelCapabilities(
             provider=ProviderType.ZHIPU,
-            model_name="glm-4.6",
-            friendly_name="Zhipu AI (GLM-4.6)",
+            model_name="glm-4.6-direct",
+            friendly_name="Zhipu AI (GLM-4.6 direct)",
             context_window=200_000,
             max_output_tokens=128_000,
             supports_extended_thinking=True,
@@ -168,8 +168,8 @@ class ZhipuModelProvider(OpenAICompatibleProvider):
             max_image_size_mb=0.0,
             supports_temperature=True,
             temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="GLM-4.6 (200K context) - Prior flagship with strong coding/agents",
-            aliases=["glm46", "zhipu-4.6"],
+            description="GLM-4.6 (200K context) - Prior flagship with strong coding/agents. DIRECT-CHINA (open.bigmodel.cn) = LOW-sensitivity ONLY. Renamed -direct 2026-06-27 (GENESIS-096) to resolve the glm split-brain: both the canonical `glm-4.6` and the bare `glm` alias now resolve to US-brokered OpenRouter (z-ai/glm-4.6, Western-inferenced, MODERATE-eligible) under ONE jurisdiction.",
+            aliases=["glm46-direct", "zhipu-4.6"],
             intelligence_score=16,
         ),
         "glm-4.6v": ModelCapabilities(
