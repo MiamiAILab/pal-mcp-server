@@ -8,7 +8,6 @@ from .shared import (
     FixedTemperatureConstraint,
     ModelCapabilities,
     ProviderType,
-    RangeTemperatureConstraint,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,10 +40,18 @@ class MoonshotModelProvider(OpenAICompatibleProvider):
             intelligence_score=18,
             allow_code_generation=True,
         ),
-        "kimi-k2-thinking": ModelCapabilities(
+        # Repointed 2026-06-27 (GENESIS-096): the prior "kimi-k2-thinking",
+        # "kimi-k2-thinking-turbo", and "kimi-k2-turbo-preview" entries all 404'd
+        # against the live Moonshot catalog (probed: api.moonshot.ai/v1/models ->
+        # kimi-k2.5, kimi-k2.6, kimi-k2.7-code, kimi-k2.7-code-highspeed). The two
+        # turbo entries were removed (no live equivalent); the dedicated-thinking
+        # entry is repointed to kimi-k2.6, the newest live thinking-capable model
+        # (probed finish_reason=stop, visible content, reasoning_content present).
+        # Legacy thinking aliases retained so existing fallback references resolve.
+        "kimi-k2.6": ModelCapabilities(
             provider=ProviderType.MOONSHOT,
-            model_name="kimi-k2-thinking",
-            friendly_name="Moonshot AI (Kimi K2 Thinking)",
+            model_name="kimi-k2.6",
+            friendly_name="Moonshot AI (Kimi K2.6)",
             context_window=262_144,
             max_output_tokens=32_768,
             supports_extended_thinking=True,
@@ -55,48 +62,10 @@ class MoonshotModelProvider(OpenAICompatibleProvider):
             supports_images=False,
             max_image_size_mb=0.0,
             supports_temperature=True,
-            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Kimi K2 Thinking (256K context) - Dedicated deep reasoning model with multi-step tool calls and long CoT traces",
-            aliases=["k2-thinking", "kimi-thinking"],
-            intelligence_score=16,
-        ),
-        "kimi-k2-thinking-turbo": ModelCapabilities(
-            provider=ProviderType.MOONSHOT,
-            model_name="kimi-k2-thinking-turbo",
-            friendly_name="Moonshot AI (Kimi K2 Thinking Turbo)",
-            context_window=262_144,
-            max_output_tokens=32_768,
-            supports_extended_thinking=True,
-            supports_system_prompts=True,
-            supports_streaming=True,
-            supports_function_calling=True,
-            supports_json_mode=True,
-            supports_images=False,
-            max_image_size_mb=0.0,
-            supports_temperature=True,
-            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Kimi K2 Thinking Turbo (256K context) - Fast reasoning variant, lower latency than K2 Thinking",
-            aliases=["k2-thinking-turbo", "kimi-turbo"],
-            intelligence_score=15,
-        ),
-        "kimi-k2-turbo-preview": ModelCapabilities(
-            provider=ProviderType.MOONSHOT,
-            model_name="kimi-k2-turbo-preview",
-            friendly_name="Moonshot AI (Kimi K2 Turbo)",
-            context_window=262_144,
-            max_output_tokens=16_384,
-            supports_extended_thinking=False,
-            supports_system_prompts=True,
-            supports_streaming=True,
-            supports_function_calling=True,
-            supports_json_mode=True,
-            supports_images=False,
-            max_image_size_mb=0.0,
-            supports_temperature=True,
-            temperature_constraint=RangeTemperatureConstraint(0.0, 2.0, 0.7),
-            description="Kimi K2 Turbo (256K context) - Speed-optimized non-thinking K2 for high-throughput agents",
-            aliases=["k2-turbo", "kimi-k2-turbo"],
-            intelligence_score=14,
+            temperature_constraint=FixedTemperatureConstraint(1.0),
+            description="Kimi K2.6 (256K context) - Deep-reasoning MoE with long CoT traces and multi-step tool calls (live successor to the retired k2-thinking line)",
+            aliases=["k2.6", "kimi2.6", "k2-thinking", "kimi-thinking"],
+            intelligence_score=17,
         ),
     }
 
@@ -115,6 +84,5 @@ class MoonshotModelProvider(OpenAICompatibleProvider):
         resolved_name = self._resolve_model_name(model_name)
         return resolved_name in (
             "kimi-k2.5",
-            "kimi-k2-thinking",
-            "kimi-k2-thinking-turbo",
+            "kimi-k2.6",
         )

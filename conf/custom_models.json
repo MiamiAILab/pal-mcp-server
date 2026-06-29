@@ -22,10 +22,9 @@
   },
   "models": [
     {
-      "model_name": "deepseek-reasoner",
+      "model_name": "deepseek-reasoner-direct",
       "aliases": [
-        "deepseek-r1",
-        "r1"
+        "deepseek-r1-direct"
       ],
       "context_window": 128000,
       "max_output_tokens": 64000,
