@@ -287,6 +287,28 @@
       "intelligence_score": 15
     },
     {
+      "model_name": "qwen/qwen3.5-397b-a17b",
+      "aliases": [
+        "qwen3.5-397b",
+        "qwen3.5",
+        "qwen-thinking",
+        "qwen3-thinking",
+        "qwen3-235b"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "Qwen3.5 397B A17B (256K context) via US-brokered OpenRouter — Qwen MoE reasoning model, 17B active params. GENESIS-097 repoint of the consensus reasoning seat off dead Together serverless (400 model_not_available). max_output_tokens kept at 65536 to fit the hidden <think> trace + final answer (prevents empty verdicts in consensus; carried over from the retired Together entry's SOL-338 fix).",
+      "intelligence_score": 19
+    },
+    {
       "model_name": "mistralai/mistral-large-2512",
       "aliases": [
         "mistral-large-3",
