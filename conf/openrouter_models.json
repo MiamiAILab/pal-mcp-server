@@ -208,6 +208,10 @@
     },
     {
       "model_name": "deepseek/deepseek-r1-0528",
+      "openrouter_provider_route": {
+        "only": ["deepinfra", "atlas-cloud"],
+        "allow_fallbacks": false
+      },
       "aliases": [
         "deepseek-r1",
         "r1",
@@ -225,6 +229,10 @@
     },
     {
       "model_name": "deepseek/deepseek-v3.2",
+      "openrouter_provider_route": {
+        "only": ["deepinfra", "atlas-cloud", "venice", "digitalocean", "friendli", "google-vertex", "sambanova"],
+        "allow_fallbacks": false
+      },
       "aliases": [
         "deepseek-v3.2",
         "deepseek-v3",
@@ -247,6 +255,10 @@
     },
     {
       "model_name": "minimax/minimax-m2",
+      "openrouter_provider_route": {
+        "only": ["google-vertex"],
+        "allow_fallbacks": false
+      },
       "aliases": [
         "minimax-m2",
         "minimax",
@@ -267,6 +279,10 @@
     },
     {
       "model_name": "z-ai/glm-4.6",
+      "openrouter_provider_route": {
+        "only": ["deepinfra", "venice", "atlas-cloud"],
+        "allow_fallbacks": false
+      },
       "aliases": [
         "glm-4.6",
         "glm",
@@ -288,6 +304,10 @@
     },
     {
       "model_name": "qwen/qwen3.5-397b-a17b",
+      "openrouter_provider_route": {
+        "only": ["digitalocean", "deepinfra", "morph", "parasail", "atlas-cloud", "gmicloud", "venice"],
+        "allow_fallbacks": false
+      },
       "aliases": [
         "qwen3.5-397b",
         "qwen3.5",
