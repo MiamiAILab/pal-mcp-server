@@ -399,7 +399,6 @@ def configure_providers():
     from providers.openai import OpenAIModelProvider
     from providers.shared import ProviderType
     from providers.xai import XAIModelProvider
-    from providers.together import TogetherModelProvider
     from providers.perplexity import PerplexityModelProvider
     from providers.mistral import MistralModelProvider
     from providers.openrouter import OpenRouterProvider
@@ -466,12 +465,10 @@ def configure_providers():
         has_native_apis = True
         logger.info("DashScope API key found - Qwen models available")
 
-    # Check for Together.ai API key
-    together_key = get_env("TOGETHER_API_KEY")
-    if together_key and together_key != "your_together_api_key_here":
-        valid_providers.append("Together AI (Qwen3)")
-        has_native_apis = True
-        logger.info("Together API key found - Qwen3 models available")
+    # Together.ai PURGED 2026-07-04 (GENESIS-097, Mario directive). Together retired
+    # serverless Qwen 2026-06-29; provider removed entirely. Qwen seats are now
+    # US-brokered via OpenRouter (qwen/qwen3-coder, qwen/qwen3.5-397b-a17b) for
+    # MODERATE sensitivity, or Alibaba DashScope direct for LOW-sensitivity.
 
     # Check for Perplexity API key
     perplexity_key = get_env("PERPLEXITY_API_KEY")
@@ -544,10 +541,6 @@ def configure_providers():
             ModelProviderRegistry.register_provider(ProviderType.ALIBABA, AlibabaModelProvider)
             registered_providers.append(ProviderType.ALIBABA.value)
             logger.debug(f"Registered provider: {ProviderType.ALIBABA.value}")
-        if together_key and together_key != "your_together_api_key_here":
-            ModelProviderRegistry.register_provider(ProviderType.TOGETHER, TogetherModelProvider)
-            registered_providers.append(ProviderType.TOGETHER.value)
-            logger.debug(f"Registered provider: {ProviderType.TOGETHER.value}")
         if perplexity_key and perplexity_key != "your_perplexity_api_key_here":
             ModelProviderRegistry.register_provider(ProviderType.PERPLEXITY, PerplexityModelProvider)
             registered_providers.append(ProviderType.PERPLEXITY.value)
@@ -1164,6 +1157,23 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
 
         provider = ModelProviderRegistry.get_provider_for_model(model_context.model_name)
         if provider is None:
+            requested_model = model_context.model_name
+            # FAIL-LOUD (GENESIS-097): NEVER silently substitute an EXPLICITLY requested
+            # model. The old behavior swapped an unresolvable explicit model to the
+            # preferred-fallback default (gemini-2.5-flash via registry.get_preferred_
+            # fallback_model), logged only at debug — so a MiniMax request could return
+            # gemini-flash, faking a distinct cross-family vote. Only 'auto' may resolve
+            # to a fallback; an explicit-but-unavailable model must raise so the caller
+            # sees it and can NO_VOTE, never a silent duplicate-family vote.
+            if requested_model.lower() != "auto":
+                available_models = ModelProviderRegistry.get_available_model_names()
+                raise ValueError(
+                    f"Requested model '{requested_model}' is not available with the "
+                    f"current providers/keys. NOT substituting a different model "
+                    f"(fail-loud routing integrity, GENESIS-097). "
+                    f"Available: {', '.join(sorted(available_models)) or 'none'}."
+                )
+
             fallback_model = None
             if tool is not None:
                 try:
@@ -1180,15 +1190,19 @@ async def reconstruct_thread_context(arguments: dict[str, Any]) -> dict[str, Any
 
             if fallback_model is None:
                 raise ValueError(
-                    f"Conversation continuation failed: model '{model_context.model_name}' is not available with current API keys."
+                    f"Conversation continuation failed: model '{requested_model}' is not available with current API keys."
                 )
 
-            logger.debug(
-                f"[CONVERSATION_DEBUG] Model '{model_context.model_name}' unavailable; swapping to '{fallback_model}' for context reconstruction"
+            # Legit auto-mode resolution — stamp it VISIBLY so a substitution is never
+            # invisible (the healthcheck / callers can detect model_used != requested).
+            logger.info(
+                f"[MODEL_SUBSTITUTION] auto-mode: '{requested_model}' -> '{fallback_model}' for context reconstruction"
             )
             model_context = ModelContext(fallback_model)
             arguments["_model_context"] = model_context
             arguments["_resolved_model_name"] = fallback_model
+            arguments["_model_substituted_from"] = requested_model
+            arguments["_model_substituted_to"] = fallback_model
     else:
         if model_context is None:
             from providers.registry import ModelProviderRegistry

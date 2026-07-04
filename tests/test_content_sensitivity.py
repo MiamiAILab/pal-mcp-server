@@ -222,7 +222,7 @@ class TestProviderExclusion:
         assert ProviderType.XAI not in GEOPOLITICAL_PROVIDERS
         assert ProviderType.MISTRAL not in GEOPOLITICAL_PROVIDERS
         assert ProviderType.PERPLEXITY not in GEOPOLITICAL_PROVIDERS
-        assert ProviderType.TOGETHER not in GEOPOLITICAL_PROVIDERS
+        # ProviderType.TOGETHER purged 2026-07-04 (GENESIS-097)
 
     def test_is_provider_excluded(self):
         from utils.content_sensitivity import ContentSensitivityService

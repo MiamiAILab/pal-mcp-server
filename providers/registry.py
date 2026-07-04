@@ -43,7 +43,8 @@ class ModelProviderRegistry:
         ProviderType.MOONSHOT,  # Direct Moonshot AI (Kimi) access
         ProviderType.ZHIPU,  # Direct Zhipu AI (GLM-4) access
         ProviderType.ALIBABA,  # Direct Alibaba Model Studio (Qwen) access
-        ProviderType.TOGETHER,  # Together.ai (Qwen3, open models)
+        # ProviderType.TOGETHER PURGED 2026-07-04 (GENESIS-097) — Together retired
+        # serverless Qwen; Qwen now via OpenRouter (US-brokered) or Alibaba (direct).
         ProviderType.PERPLEXITY,  # Perplexity AI (Sonar search-augmented models)
         ProviderType.MISTRAL,  # Mistral AI (Mistral Large, Magistral)
         ProviderType.OPENROUTER,  # OpenRouter (Western multi-model gateway; Llama-4-Maverick + open Western models)
@@ -328,7 +329,7 @@ class ModelProviderRegistry:
             ProviderType.MOONSHOT: "MOONSHOT_API_KEY",
             ProviderType.ZHIPU: "ZHIPU_API_KEY",
             ProviderType.ALIBABA: "DASHSCOPE_API_KEY",
-            ProviderType.TOGETHER: "TOGETHER_API_KEY",
+            # ProviderType.TOGETHER purged 2026-07-04 (GENESIS-097)
             ProviderType.PERPLEXITY: "PERPLEXITY_API_KEY",
             ProviderType.MISTRAL: "MISTRAL_API_KEY",
             ProviderType.OPENROUTER: "OPENROUTER_API_KEY",
