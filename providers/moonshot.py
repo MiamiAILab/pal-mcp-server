@@ -67,6 +67,31 @@ class MoonshotModelProvider(OpenAICompatibleProvider):
             aliases=["k2.6", "kimi2.6", "k2-thinking", "kimi-thinking"],
             intelligence_score=17,
         ),
+        # Added 2026-07-12 (Genesis, GENESIS-097 batch): Kimi K2.7 Code, the
+        # dedicated code-lane seat. Probed live against api.moonshot.ai/v1/models
+        # (catalog includes kimi-k2.7-code + kimi-k2.7-code-highspeed alongside
+        # kimi-k2.5 and kimi-k2.6, all retained). Code-generation flagship of the
+        # Kimi line.
+        "kimi-k2.7-code": ModelCapabilities(
+            provider=ProviderType.MOONSHOT,
+            model_name="kimi-k2.7-code",
+            friendly_name="Moonshot AI (Kimi K2.7 Code)",
+            context_window=262_144,
+            max_output_tokens=65_535,
+            supports_extended_thinking=True,
+            supports_system_prompts=True,
+            supports_streaming=True,
+            supports_function_calling=True,
+            supports_json_mode=True,
+            supports_images=False,
+            max_image_size_mb=0.0,
+            supports_temperature=True,
+            temperature_constraint=FixedTemperatureConstraint(1.0),
+            description="Kimi K2.7 Code (256K context) - Dedicated agentic-coding MoE optimized for software engineering, multi-file edits, and long tool-use chains",
+            aliases=["k2.7-code", "kimi-k2.7", "k2.7", "kimi-code"],
+            intelligence_score=18,
+            allow_code_generation=True,
+        ),
     }
 
     def __init__(self, api_key: str, **kwargs):
@@ -85,4 +110,5 @@ class MoonshotModelProvider(OpenAICompatibleProvider):
         return resolved_name in (
             "kimi-k2.5",
             "kimi-k2.6",
+            "kimi-k2.7-code",
         )

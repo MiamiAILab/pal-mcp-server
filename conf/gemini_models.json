@@ -50,15 +50,38 @@
       "max_image_size_mb": 32.0
     },
     {
-      "model_name": "gemini-3-flash-preview",
-      "friendly_name": "Gemini 3 Flash Preview",
+      "model_name": "gemini-3.5-flash",
+      "friendly_name": "Gemini 3.5 Flash",
       "aliases": [
         "flash",
+        "gemini-flash",
+        "gemini-3.5-flash",
+        "flash-3.5"
+      ],
+      "intelligence_score": 16,
+      "description": "Gemini 3.5 Flash (1M context, 65K output) - Current-gen frontier-class Flash at a fraction of Pro cost ($1.50/$9 per M). Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live via Gemini direct API (modelVersion=gemini-3.5-flash). `flash` alias repointed here from the deprecated gemini-3-flash-preview.",
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "max_thinking_tokens": 24576,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "allow_code_generation": true,
+      "max_image_size_mb": 32.0
+    },
+    {
+      "model_name": "gemini-3-flash-preview",
+      "friendly_name": "Gemini 3 Flash Preview (DEPRECATED)",
+      "aliases": [
         "gemini-3-flash",
         "gemini3-flash"
       ],
       "intelligence_score": 15,
-      "description": "Gemini 3 Flash Preview (1M context, 65K output) - Frontier-class performance rivaling larger models at a fraction of the cost.",
+      "description": "DEPRECATED 2026-06-25 (superseded by gemini-3.5-flash). Kept for back-reference only; bare `flash` alias repointed to 3.5-flash 2026-07-12 (Genesis, GENESIS-097). Gemini 3 Flash Preview (1M context, 65K output) - Frontier-class performance rivaling larger models at a fraction of the cost.",
       "context_window": 1048576,
       "max_output_tokens": 65536,
       "max_thinking_tokens": 24576,

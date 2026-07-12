@@ -26,6 +26,56 @@
   },
   "models": [
     {
+      "model_name": "gpt-5.6-sol",
+      "friendly_name": "OpenAI (GPT 5.6 Sol)",
+      "aliases": [
+        "gpt-5.6",
+        "gpt5.6",
+        "5.6",
+        "gpt-5.6-sol",
+        "gpt5.6-sol"
+      ],
+      "intelligence_score": 21,
+      "description": "GPT-5.6 Sol (1.05M context, 128K output) - Current frontier reasoning/coding model (GA 2026-07-09); flagship of the Sol/Terra/Luna tier family. gpt-5.6 aliases here.",
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "default_reasoning_effort": "medium",
+      "allow_code_generation": true,
+      "temperature_constraint": "fixed"
+    },
+    {
+      "model_name": "gpt-5.6-terra",
+      "friendly_name": "OpenAI (GPT 5.6 Terra)",
+      "aliases": [
+        "gpt5.6-terra",
+        "5.6-terra",
+        "gpt-5.6-terra"
+      ],
+      "intelligence_score": 19,
+      "description": "GPT-5.6 Terra (1.05M context, 128K output) - Balanced quality/cost tier, ~GPT-5.5-class at roughly half Sol cost. For production RAG, chatbots, standard API workloads.",
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": true,
+      "supports_json_mode": true,
+      "supports_images": true,
+      "supports_temperature": true,
+      "max_image_size_mb": 20.0,
+      "default_reasoning_effort": "medium",
+      "allow_code_generation": true,
+      "temperature_constraint": "fixed"
+    },
+    {
       "model_name": "gpt-5.4",
       "friendly_name": "OpenAI (GPT-5.4)",
       "aliases": [

@@ -25,6 +25,25 @@
   },
   "models": [
     {
+      "model_name": "anthropic/claude-fable-5",
+      "aliases": [
+        "fable",
+        "fable-5",
+        "fable5",
+        "claude-fable-5"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "Claude Fable 5 (1M context) - Anthropic's flagship Mythos-class model, most intelligent generally-available Claude, sits above Opus in capability (GA 2026-06-09). $10/$50 per M. Added 2026-07-12 (Genesis, GENESIS-097 batch) via OpenRouter (zen has no native Anthropic provider). Probed live: `anthropic/claude-fable-5` resolves to snapshot claude-5-fable-20260609. `fable`/`fable-5` aliases resolve here; `opus` stays on claude-opus-4.8 by design.",
+      "intelligence_score": 20
+    },
+    {
       "model_name": "anthropic/claude-opus-4.8",
       "aliases": [
         "opus",
@@ -244,6 +263,45 @@
       "allow_code_generation": true,
       "description": "DeepSeek V3.2 (131K context) via OpenRouter \u2014 cost-efficient flagship for code generation and reasoning. MIA-32 Tier 2/3 Chinese-model expansion (Sonia Fork-10).",
       "intelligence_score": 16
+    },
+    {
+      "model_name": "deepseek/deepseek-v4-pro",
+      "aliases": [
+        "deepseek-v4-pro",
+        "deepseek-v4",
+        "v4-pro"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "DeepSeek V4 Pro (1M context) via OpenRouter (US-brokered) \u2014 MIT open-weight flagship for code generation and reasoning. MODERATE sensitivity per MIA-32. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot deepseek-v4-pro-20260423 ($0.43/$0.87 per M). US-brokered ONLY \u2014 the direct-China custom endpoint is deliberately NOT used.",
+      "intelligence_score": 17
+    },
+    {
+      "model_name": "minimax/minimax-m3",
+      "aliases": [
+        "minimax-m3",
+        "m3"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "MiniMax M3 (1M context) via OpenRouter (US-brokered) \u2014 open-weight Chinese-lineage frontier successor to M2. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot minimax-m3-20260531 ($0.30/$1.20 per M). Jurisdiction taxonomy same as M2.7 (GENESIS-096): `m3`/`minimax-m3` aliases US-brokered here; bare `minimax`/`m2` stay on the M2 seat (not repointed); direct-China M2.7 in providers/minimax.py stays LOW-sensitivity only.",
+      "intelligence_score": 17
     },
     {
       "model_name": "minimax/minimax-m2",
@@ -571,50 +629,32 @@
       "intelligence_score": 16
     },
     {
-      "model_name": "x-ai/grok-4",
+      "model_name": "qwen/qwen3.6-plus",
       "aliases": [
-        "grok-4",
-        "grok4",
-        "grok"
+        "qwen3.6",
+        "qwen3.6-plus",
+        "qwen-thinking",
+        "qwen3-thinking",
+        "qwen-reasoner"
       ],
-      "context_window": 256000,
-      "max_output_tokens": 256000,
+      "context_window": 1000000,
+      "max_output_tokens": 32768,
       "supports_extended_thinking": true,
       "supports_json_mode": true,
       "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
       "supports_temperature": true,
       "temperature_constraint": "range",
-      "description": "xAI's Grok 4 via OpenRouter with vision and advanced reasoning",
-      "intelligence_score": 15
-    },
-    {
-      "model_name": "x-ai/grok-4.1-fast",
-      "aliases": [
-        "grok-4.1-fast-openrouter",
-        "grok-4.1-openrouter"
-      ],
-      "context_window": 2000000,
-      "max_output_tokens": 2000000,
-      "supports_extended_thinking": true,
-      "supports_json_mode": true,
-      "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
-      "supports_temperature": true,
-      "temperature_constraint": "range",
-      "description": "xAI's Grok 4.1 Fast Reasoning via OpenRouter (2M context) with vision and advanced reasoning",
-      "intelligence_score": 15
+      "allow_code_generation": true,
+      "description": "Qwen3.6 Plus (1M context) via OpenRouter (US-brokered) \u2014 flagship non-Max Qwen3.6 reasoning seat. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot qwen3.6-plus-04-02 ($0.33/$1.95 per M). Reasoning aliases (qwen-thinking/qwen3-thinking/qwen-reasoner) repointed here from the prior qwen3.5-397b seat, which is kept as fallback. Qwen3.6-Max explicitly EXCLUDED (closed + China-hosted).",
+      "intelligence_score": 17
     },
     {
       "model_name": "qwen/qwen3.5-397b-a17b",
       "aliases": [
         "qwen3.5-397b",
-        "qwen3.5",
-        "qwen-thinking",
-        "qwen3-thinking",
-        "qwen-reasoner"
+        "qwen3.5"
       ],
       "context_window": 262144,
       "max_output_tokens": 32768,
@@ -626,7 +666,7 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "Qwen3.5 397B MoE reasoning (256K ctx, 17B active) via OpenRouter (US-brokered). GENESIS-097 replacement for the retired Together serverless seat \u2014 DROP-IN reasoning model for consensus/fallback.",
+      "description": "Qwen3.5 397B MoE reasoning (256K ctx, 17B active) via OpenRouter (US-brokered). GENESIS-097 replacement for the retired Together serverless seat \u2014 reasoning fallback behind qwen3.6-plus (reasoning aliases repointed to 3.6 2026-07-12).",
       "intelligence_score": 16
     },
     {
