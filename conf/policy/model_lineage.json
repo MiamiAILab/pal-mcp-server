@@ -1,0 +1,38 @@
+{
+  "_README": {
+    "purpose": "AXIS 1 (model TRAINING LINEAGE) classification per seat. LOAD-BEARING HIGH control. The hinge is what/who trained the model, NOT serving infra. A US-brokered Chinese-lineage model is EXCLUDED from HIGH entirely (no broker/ZDR exception). Mirrors governance/2026-07-13__llm-routing-jurisdiction-policy.md section 3 (CR-001). Genesis (roster owner) maintains this on roster change and notifies Complina (policy section 7).",
+    "canonical_policy": "governance/2026-07-13__llm-routing-jurisdiction-policy.md",
+    "fields": {
+      "lineage_jurisdiction": "western | chinese | unknown. unknown => not-HIGH-eligible (fail-closed).",
+      "max_sensitivity": "HIGH | MODERATE | LOW. Derived from policy: western-lineage=HIGH; chinese-lineage+verified-US-broker=MODERATE; chinese-lineage+unstated/unverified-broker=LOW; unknown-lineage=LOW.",
+      "china_lineage_prefixes": "Slug prefixes that FORCE lineage=chinese regardless of this map — a seat matching one of these MUST NOT be classified western here, and MUST carry a route pin (Axis 2). Prevents a mislabel from smuggling a Chinese-lineage model into HIGH."
+    },
+    "china_lineage_prefixes": ["deepseek/", "deepseek-", "minimax/", "minimax-", "z-ai/", "glm", "zhipu", "qwen/", "qwen", "moonshot/", "kimi", "baidu/", "ernie", "01-ai/", "yi-"],
+    "removed_lineages": {
+      "note": "Seats removed from the roster — must NOT appear in openrouter_models.json at all. Tier A flags any surviving seat/alias (policy section 5.F stale-alias hygiene, tracked with Genesis).",
+      "x-ai/": "Grok/xAI REMOVED 2026-07-03 (key deleted, registries stripped). Any x-ai/ or grok* seat/alias in the catalog => BLOCK."
+    }
+  },
+  "seats": {
+    "anthropic/": { "lineage_jurisdiction": "western", "max_sensitivity": "HIGH" },
+    "openai/":    { "lineage_jurisdiction": "western", "max_sensitivity": "HIGH" },
+    "google/":    { "lineage_jurisdiction": "western", "max_sensitivity": "HIGH" },
+    "mistralai/": { "lineage_jurisdiction": "western", "max_sensitivity": "HIGH", "note": "France/EU — trusted Western jurisdiction, HIGH-eligible (policy section 3a). Fallback-only is a quality call, not jurisdiction." },
+    "meta-llama/":{ "lineage_jurisdiction": "western", "max_sensitivity": "HIGH" },
+    "perplexity/":{ "lineage_jurisdiction": "western", "max_sensitivity": "HIGH", "note": "WRAPPER — HIGH-eligible ONLY while backend set constrained to Western-lineage (policy section 5.D). Re-verify on backend change." },
+
+    "deepseek/deepseek-r1-0528":  { "lineage_jurisdiction": "chinese", "max_sensitivity": "MODERATE", "broker": "OpenRouter-US-verified" },
+    "deepseek/deepseek-v3.2":     { "lineage_jurisdiction": "chinese", "max_sensitivity": "MODERATE", "broker": "OpenRouter-US-verified" },
+    "minimax/minimax-m2":         { "lineage_jurisdiction": "chinese", "max_sensitivity": "MODERATE", "broker": "OpenRouter-US-verified" },
+    "z-ai/glm-4.6":               { "lineage_jurisdiction": "chinese", "max_sensitivity": "MODERATE", "broker": "OpenRouter-US-verified" },
+    "qwen/qwen3.5-397b-a17b":     { "lineage_jurisdiction": "chinese", "max_sensitivity": "MODERATE", "broker": "OpenRouter-US-verified" },
+
+    "_AMBIGUOUS_UNSTATED_BROKER": {
+      "note": "policy section 4 — 4 new frontier Chinese-lineage seats seated with UNSTATED broker. FAIL-CLOSED to LOW-only until Genesis (roster owner) affirmatively states the broker. If OpenRouter/Together US-brokered they move to MODERATE. These slugs are NOT YET in the Alan-machine catalog (they are on the Mac-Mini refresh); entries here are pre-staged so the gate is correct the moment they land.",
+      "deepseek-v4-pro":  { "lineage_jurisdiction": "chinese", "max_sensitivity": "LOW", "broker": "UNSTATED" },
+      "minimax-m3":       { "lineage_jurisdiction": "chinese", "max_sensitivity": "LOW", "broker": "UNSTATED" },
+      "kimi-k2.7-code":   { "lineage_jurisdiction": "chinese", "max_sensitivity": "LOW", "broker": "UNSTATED" },
+      "qwen3.6-plus":     { "lineage_jurisdiction": "chinese", "max_sensitivity": "LOW", "broker": "UNSTATED" }
+    }
+  }
+}
