@@ -25,6 +25,25 @@
   },
   "models": [
     {
+      "model_name": "anthropic/claude-fable-5",
+      "aliases": [
+        "fable",
+        "fable-5",
+        "fable5",
+        "claude-fable-5"
+      ],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_json_mode": false,
+      "supports_function_calling": false,
+      "supports_images": true,
+      "max_image_size_mb": 5.0,
+      "allow_code_generation": true,
+      "description": "Claude Fable 5 (1M context) - Anthropic's flagship Mythos-class model, most intelligent generally-available Claude, sits above Opus in capability (GA 2026-06-09). $10/$50 per M. Added 2026-07-12 (Genesis, GENESIS-097 batch) via OpenRouter (zen has no native Anthropic provider). Probed live: `anthropic/claude-fable-5` resolves to snapshot claude-5-fable-20260609. `fable`/`fable-5` aliases resolve here; `opus` stays on claude-opus-4.8 by design.",
+      "intelligence_score": 20
+    },
+    {
       "model_name": "anthropic/claude-opus-4.8",
       "aliases": [
         "opus",
@@ -39,7 +58,7 @@
       "supports_images": true,
       "max_image_size_mb": 5.0,
       "allow_code_generation": true,
-      "description": "Claude Opus 4.8 (1M context) - Anthropic's most capable Opus model for long-horizon agentic work, multi-step reasoning, and complex coding. Bumped 2026-06-12 (Genesis, SOL-433); `opus` alias resolves here for the cross-family consensus opus seat. Served via OpenRouter because zen has no native Anthropic provider — SOL-433 wired OpenRouter so this seat works at all (infra repair, NOT a billing rule). Corrected 2026-06-27 (GENESIS-096): the prior 'no ANTHROPIC_API_KEY per fleet billing rule' gloss was wrong — an ANTHROPIC_API_KEY does exist in Doppler but is reserved for the separate `claude -p` autonomous runtime (PR #104) and does not apply to zen consensus routing. Keeping OpenRouter is deliberate: Anthropic's API is not OpenAI-compatible (a native provider is real new code/dependency), and OpenRouter passes Anthropic list pricing through at a negligible (~5% credit-fee) premium.",
+      "description": "Claude Opus 4.8 (1M context) - Anthropic's most capable Opus model for long-horizon agentic work, multi-step reasoning, and complex coding. Bumped 2026-06-12 (Genesis, SOL-433); `opus` alias resolves here for the cross-family consensus opus seat. Served via OpenRouter because zen has no native Anthropic provider \u2014 SOL-433 wired OpenRouter so this seat works at all (infra repair, NOT a billing rule). Corrected 2026-06-27 (GENESIS-096): the prior 'no ANTHROPIC_API_KEY per fleet billing rule' gloss was wrong \u2014 an ANTHROPIC_API_KEY does exist in Doppler but is reserved for the separate `claude -p` autonomous runtime (PR #104) and does not apply to zen consensus routing. Keeping OpenRouter is deliberate: Anthropic's API is not OpenAI-compatible (a native provider is real new code/dependency), and OpenRouter passes Anthropic list pricing through at a negligible (~5% credit-fee) premium.",
       "intelligence_score": 19
     },
     {
@@ -208,10 +227,6 @@
     },
     {
       "model_name": "deepseek/deepseek-r1-0528",
-      "openrouter_provider_route": {
-        "only": ["deepinfra", "atlas-cloud"],
-        "allow_fallbacks": false
-      },
       "aliases": [
         "deepseek-r1",
         "r1",
@@ -225,14 +240,17 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "DeepSeek R1 with thinking mode - advanced reasoning capabilities (text-only)",
-      "intelligence_score": 15
+      "intelligence_score": 15,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "atlas-cloud"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "deepseek/deepseek-v3.2",
-      "openrouter_provider_route": {
-        "only": ["deepinfra", "atlas-cloud", "venice", "digitalocean", "friendli", "google-vertex", "sambanova"],
-        "allow_fallbacks": false
-      },
       "aliases": [
         "deepseek-v3.2",
         "deepseek-v3",
@@ -250,15 +268,62 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "DeepSeek V3.2 (131K context) via OpenRouter — cost-efficient flagship for code generation and reasoning. MIA-32 Tier 2/3 Chinese-model expansion (Sonia Fork-10).",
-      "intelligence_score": 16
+      "description": "DeepSeek V3.2 (131K context) via OpenRouter \u2014 cost-efficient flagship for code generation and reasoning. MIA-32 Tier 2/3 Chinese-model expansion (Sonia Fork-10).",
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "atlas-cloud",
+          "venice",
+          "digitalocean",
+          "friendli",
+          "google-vertex",
+          "sambanova"
+        ],
+        "allow_fallbacks": false
+      }
+    },
+    {
+      "model_name": "deepseek/deepseek-v4-pro",
+      "aliases": [
+        "deepseek-v4-pro",
+        "deepseek-v4",
+        "v4-pro"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "DeepSeek V4 Pro (1M context) via OpenRouter (US-brokered) \u2014 MIT open-weight flagship for code generation and reasoning. MODERATE sensitivity per MIA-32. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot deepseek-v4-pro-20260423 ($0.43/$0.87 per M). US-brokered ONLY \u2014 the direct-China custom endpoint is deliberately NOT used.",
+      "intelligence_score": 17
+    },
+    {
+      "model_name": "minimax/minimax-m3",
+      "aliases": [
+        "minimax-m3",
+        "m3"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "MiniMax M3 (1M context) via OpenRouter (US-brokered) \u2014 open-weight Chinese-lineage frontier successor to M2. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot minimax-m3-20260531 ($0.30/$1.20 per M). Jurisdiction taxonomy same as M2.7 (GENESIS-096): `m3`/`minimax-m3` aliases US-brokered here; bare `minimax`/`m2` stay on the M2 seat (not repointed); direct-China M2.7 in providers/minimax.py stays LOW-sensitivity only.",
+      "intelligence_score": 17
     },
     {
       "model_name": "minimax/minimax-m2",
-      "openrouter_provider_route": {
-        "only": ["google-vertex"],
-        "allow_fallbacks": false
-      },
       "aliases": [
         "minimax-m2",
         "minimax",
@@ -274,15 +339,17 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "MiniMax M2 (204K context) via OpenRouter — Chinese-lineage frontier model. MIA-32 Tier 2/3 (per v0.3.1 patch correction: minimax/minimax-m2, NOT m2.7).",
-      "intelligence_score": 16
+      "description": "MiniMax M2 (204K context) via OpenRouter \u2014 Chinese-lineage frontier model. MIA-32 Tier 2/3 (per v0.3.1 patch correction: minimax/minimax-m2, NOT m2.7).",
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "google-vertex"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "z-ai/glm-4.6",
-      "openrouter_provider_route": {
-        "only": ["deepinfra", "venice", "atlas-cloud"],
-        "allow_fallbacks": false
-      },
       "aliases": [
         "glm-4.6",
         "glm",
@@ -299,24 +366,28 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "GLM-4.6 (202K context) via OpenRouter — Zhipu AI flagship reasoning model. MIA-32 Tier 2/3 Chinese-model expansion.",
-      "intelligence_score": 15
+      "description": "GLM-4.6 (202K context) via OpenRouter \u2014 Zhipu AI flagship reasoning model. MIA-32 Tier 2/3 Chinese-model expansion.",
+      "intelligence_score": 15,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "venice",
+          "atlas-cloud"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
-      "model_name": "qwen/qwen3.5-397b-a17b",
-      "openrouter_provider_route": {
-        "only": ["digitalocean", "deepinfra", "morph", "parasail", "atlas-cloud", "gmicloud", "venice"],
-        "allow_fallbacks": false
-      },
+      "model_name": "moonshotai/kimi-k2.7-code",
       "aliases": [
-        "qwen3.5-397b",
-        "qwen3.5",
-        "qwen-thinking",
-        "qwen3-thinking",
-        "qwen3-235b"
+        "kimi-k2.7-code",
+        "k2.7-code",
+        "kimi-k2.7",
+        "k2.7",
+        "kimi-code"
       ],
       "context_window": 262144,
-      "max_output_tokens": 65536,
+      "max_output_tokens": 65535,
       "supports_extended_thinking": true,
       "supports_json_mode": true,
       "supports_function_calling": true,
@@ -325,8 +396,14 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "Qwen3.5 397B A17B (256K context) via US-brokered OpenRouter — Qwen MoE reasoning model, 17B active params. GENESIS-097 repoint of the consensus reasoning seat off dead Together serverless (400 model_not_available). max_output_tokens kept at 65536 to fit the hidden <think> trace + final answer (prevents empty verdicts in consensus; carried over from the retired Together entry's SOL-338 fix).",
-      "intelligence_score": 19
+      "description": "Kimi K2.7 Code (256K context) via OpenRouter (US-brokered) — Moonshot/Chinese-lineage dedicated agentic-coding MoE. US-BROKERED ONLY per Alan SM ruling on PR #12 frontier-seat governance flag (2026-07-15) + evidence-regime policy §4: a Chinese-lineage frontier seat requires an affirmatively-verified US-hosted broker. Pinned to DeepInfra (Palo Alto CA HQ, US-hosted infra — affirmatively verified 2026-07-15 via web-grounded jurisdiction check: aiwiki.ai/wiki/deepinfra, cbinsights.com/company/deepinfra) with allow_fallbacks:false, so inference CANNOT spill to the direct-China Moonshot endpoint or any Chinese provider (SiliconFlow/Novita/Moonshot-direct explicitly excluded). The direct-China seat lives in providers/moonshot.py as kimi-k2.7-code-direct (LOW-sensitivity only). MOONSHOT outranks OPENROUTER in registry priority, so the clean aliases were stripped from the -direct entry and moved here to make this US-broker pin win. Same GENESIS-096 pattern as minimax/minimax-m2.",
+      "intelligence_score": 18,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "mistralai/mistral-large-2512",
@@ -346,7 +423,7 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "Mistral Large 3 (Dec 2025 build, 262K context) via OpenRouter — repriced $0.50/$1.50 per Sonia 2026-05-23 verification (4x reduction). MIA-32 Tier 2 EU-lineage.",
+      "description": "Mistral Large 3 (Dec 2025 build, 262K context) via OpenRouter \u2014 repriced $0.50/$1.50 per Sonia 2026-05-23 verification (4x reduction). MIA-32 Tier 2 EU-lineage.",
       "intelligence_score": 15
     },
     {
@@ -613,40 +690,75 @@
       "intelligence_score": 16
     },
     {
-      "model_name": "x-ai/grok-4",
+      "model_name": "qwen/qwen3.6-plus",
       "aliases": [
-        "grok-4",
-        "grok4",
-        "grok"
+        "qwen3.6",
+        "qwen3.6-plus",
+        "qwen-thinking",
+        "qwen3-thinking",
+        "qwen-reasoner"
       ],
-      "context_window": 256000,
-      "max_output_tokens": 256000,
+      "context_window": 1000000,
+      "max_output_tokens": 32768,
       "supports_extended_thinking": true,
       "supports_json_mode": true,
       "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
       "supports_temperature": true,
       "temperature_constraint": "range",
-      "description": "xAI's Grok 4 via OpenRouter with vision and advanced reasoning",
-      "intelligence_score": 15
+      "allow_code_generation": true,
+      "description": "Qwen3.6 Plus (1M context) via OpenRouter (US-brokered) \u2014 flagship non-Max Qwen3.6 reasoning seat. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot qwen3.6-plus-04-02 ($0.33/$1.95 per M). Reasoning aliases (qwen-thinking/qwen3-thinking/qwen-reasoner) repointed here from the prior qwen3.5-397b seat, which is kept as fallback. Qwen3.6-Max explicitly EXCLUDED (closed + China-hosted).",
+      "intelligence_score": 17
     },
     {
-      "model_name": "x-ai/grok-4.1-fast",
+      "model_name": "qwen/qwen3.5-397b-a17b",
       "aliases": [
-        "grok-4.1-fast-openrouter",
-        "grok-4.1-openrouter"
+        "qwen3.5-397b",
+        "qwen3.5"
       ],
-      "context_window": 2000000,
-      "max_output_tokens": 2000000,
-      "supports_extended_thinking": true,
+      "context_window": 262144,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
       "supports_json_mode": true,
       "supports_function_calling": true,
-      "supports_images": true,
-      "max_image_size_mb": 20.0,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
       "supports_temperature": true,
       "temperature_constraint": "range",
-      "description": "xAI's Grok 4.1 Fast Reasoning via OpenRouter (2M context) with vision and advanced reasoning",
+      "allow_code_generation": true,
+      "description": "Qwen3.5 397B MoE reasoning (256K ctx, 17B active) via OpenRouter (US-brokered). GENESIS-097 replacement for the retired Together serverless seat \u2014 reasoning fallback behind qwen3.6-plus (reasoning aliases repointed to 3.6 2026-07-12).",
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "digitalocean",
+          "deepinfra",
+          "morph",
+          "parasail",
+          "atlas-cloud",
+          "gmicloud",
+          "venice"
+        ],
+        "allow_fallbacks": false
+      }
+    },
+    {
+      "model_name": "qwen/qwen3-coder",
+      "aliases": [
+        "qwen3-coder",
+        "qwen-coder"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 32768,
+      "supports_extended_thinking": false,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "Qwen3 Coder (256K ctx) via OpenRouter (US-brokered, serverless). GENESIS-097 \u2014 Together-serverless-retirement replacement (coder-flavored Qwen seat).",
       "intelligence_score": 15
     }
   ]

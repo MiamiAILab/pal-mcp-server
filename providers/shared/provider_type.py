@@ -16,7 +16,7 @@ class ProviderType(Enum):
     MOONSHOT = "moonshot"
     ZHIPU = "zhipu"
     ALIBABA = "alibaba"
-    TOGETHER = "together"
+    # TOGETHER purged 2026-07-04 (GENESIS-097) — Together retired serverless Qwen
     PERPLEXITY = "perplexity"
     MISTRAL = "mistral"
     OPENROUTER = "openrouter"

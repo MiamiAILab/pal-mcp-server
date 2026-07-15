@@ -103,7 +103,7 @@ class ListModelsTool(BaseTool):
             ProviderType.MINIMAX: {"name": "MiniMax AI", "env_key": "MINIMAX_API_KEY"},
             ProviderType.MOONSHOT: {"name": "Moonshot AI (Kimi)", "env_key": "MOONSHOT_API_KEY"},
             ProviderType.ZHIPU: {"name": "Zhipu AI (GLM)", "env_key": "ZHIPU_API_KEY"},
-            ProviderType.TOGETHER: {"name": "Together AI", "env_key": "TOGETHER_API_KEY"},
+            # Together AI purged 2026-07-04 (GENESIS-097) — retired serverless Qwen
             ProviderType.PERPLEXITY: {"name": "Perplexity AI", "env_key": "PERPLEXITY_API_KEY"},
             ProviderType.MISTRAL: {"name": "Mistral AI", "env_key": "MISTRAL_API_KEY"},
             # OpenRouter is an aggregator, not a native single-vendor provider, so it
