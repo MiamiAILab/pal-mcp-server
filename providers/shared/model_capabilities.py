@@ -58,6 +58,15 @@ class ModelCapabilities:
         False  # Enables structured code generation in chat tool for substantial implementations
     )
 
+    # OpenRouter provider-routing pin (data-jurisdiction control). When non-empty,
+    # this dict is forwarded verbatim as the request-body ``provider`` field to
+    # OpenRouter (via the OpenAI SDK ``extra_body`` merge in OpenAICompatibleProvider).
+    # Used to pin consensus/reasoning seats to Western-only OpenRouter providers with
+    # ``allow_fallbacks: false`` so no China/PRC endpoint can ever be selected — even
+    # on fallback. Empty ``{}`` for every non-OpenRouter model → zero behavior change
+    # outside the pinned seats. GENESIS-098 / task-126.
+    openrouter_provider_route: dict = field(default_factory=dict)
+
     # Additional attributes
     max_image_size_mb: float = 0.0
     temperature_constraint: TemperatureConstraint = field(

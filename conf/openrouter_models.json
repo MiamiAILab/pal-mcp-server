@@ -240,7 +240,14 @@
       "supports_images": false,
       "max_image_size_mb": 0.0,
       "description": "DeepSeek R1 with thinking mode - advanced reasoning capabilities (text-only)",
-      "intelligence_score": 15
+      "intelligence_score": 15,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "atlas-cloud"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "deepseek/deepseek-v3.2",
@@ -262,7 +269,19 @@
       "temperature_constraint": "range",
       "allow_code_generation": true,
       "description": "DeepSeek V3.2 (131K context) via OpenRouter \u2014 cost-efficient flagship for code generation and reasoning. MIA-32 Tier 2/3 Chinese-model expansion (Sonia Fork-10).",
-      "intelligence_score": 16
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "atlas-cloud",
+          "venice",
+          "digitalocean",
+          "friendli",
+          "google-vertex",
+          "sambanova"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "deepseek/deepseek-v4-pro",
@@ -321,7 +340,13 @@
       "temperature_constraint": "range",
       "allow_code_generation": true,
       "description": "MiniMax M2 (204K context) via OpenRouter \u2014 Chinese-lineage frontier model. MIA-32 Tier 2/3 (per v0.3.1 patch correction: minimax/minimax-m2, NOT m2.7).",
-      "intelligence_score": 16
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "google-vertex"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "z-ai/glm-4.6",
@@ -342,7 +367,15 @@
       "temperature_constraint": "range",
       "allow_code_generation": true,
       "description": "GLM-4.6 (202K context) via OpenRouter \u2014 Zhipu AI flagship reasoning model. MIA-32 Tier 2/3 Chinese-model expansion.",
-      "intelligence_score": 15
+      "intelligence_score": 15,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "venice",
+          "atlas-cloud"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "mistralai/mistral-large-2512",
@@ -667,7 +700,19 @@
       "temperature_constraint": "range",
       "allow_code_generation": true,
       "description": "Qwen3.5 397B MoE reasoning (256K ctx, 17B active) via OpenRouter (US-brokered). GENESIS-097 replacement for the retired Together serverless seat \u2014 reasoning fallback behind qwen3.6-plus (reasoning aliases repointed to 3.6 2026-07-12).",
-      "intelligence_score": 16
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "digitalocean",
+          "deepinfra",
+          "morph",
+          "parasail",
+          "atlas-cloud",
+          "gmicloud",
+          "venice"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "qwen/qwen3-coder",

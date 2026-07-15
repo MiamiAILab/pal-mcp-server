@@ -695,6 +695,20 @@ class OpenAICompatibleProvider(ModelProvider):
                     continue  # Skip unsupported parameters for reasoning models
                 completion_params[key] = value
 
+        # Data-jurisdiction pin: forward a per-model OpenRouter provider-routing
+        # policy as the request-body `provider` field (OpenAI SDK merges `extra_body`
+        # into the JSON payload; OpenRouter reads top-level `provider`). This is how
+        # consensus/reasoning seats are pinned to Western-only OpenRouter providers
+        # with `allow_fallbacks: false`, so no China/PRC endpoint can ever be selected
+        # — including on fallback. The field defaults to `{}` for every non-pinned
+        # model, so this is a no-op outside the explicitly-pinned seats and never
+        # touches native GOOGLE/OPENAI or direct-API providers. GENESIS-098 / task-126.
+        provider_route = getattr(capabilities, "openrouter_provider_route", None) if capabilities else None
+        if provider_route:
+            existing_extra = completion_params.get("extra_body") or {}
+            existing_extra["provider"] = provider_route
+            completion_params["extra_body"] = existing_extra
+
         # Check if this model needs the Responses API endpoint
         # Prefer capability metadata; fall back to static map when capabilities unavailable
         use_responses_api = False
