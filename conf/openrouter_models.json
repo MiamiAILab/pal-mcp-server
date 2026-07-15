@@ -378,6 +378,34 @@
       }
     },
     {
+      "model_name": "moonshotai/kimi-k2.7-code",
+      "aliases": [
+        "kimi-k2.7-code",
+        "k2.7-code",
+        "kimi-k2.7",
+        "k2.7",
+        "kimi-code"
+      ],
+      "context_window": 262144,
+      "max_output_tokens": 65535,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": true,
+      "description": "Kimi K2.7 Code (256K context) via OpenRouter (US-brokered) — Moonshot/Chinese-lineage dedicated agentic-coding MoE. US-BROKERED ONLY per Alan SM ruling on PR #12 frontier-seat governance flag (2026-07-15) + evidence-regime policy §4: a Chinese-lineage frontier seat requires an affirmatively-verified US-hosted broker. Pinned to DeepInfra (Palo Alto CA HQ, US-hosted infra — affirmatively verified 2026-07-15 via web-grounded jurisdiction check: aiwiki.ai/wiki/deepinfra, cbinsights.com/company/deepinfra) with allow_fallbacks:false, so inference CANNOT spill to the direct-China Moonshot endpoint or any Chinese provider (SiliconFlow/Novita/Moonshot-direct explicitly excluded). The direct-China seat lives in providers/moonshot.py as kimi-k2.7-code-direct (LOW-sensitivity only). MOONSHOT outranks OPENROUTER in registry priority, so the clean aliases were stripped from the -direct entry and moved here to make this US-broker pin win. Same GENESIS-096 pattern as minimax/minimax-m2.",
+      "intelligence_score": 18,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra"
+        ],
+        "allow_fallbacks": false
+      }
+    },
+    {
       "model_name": "mistralai/mistral-large-2512",
       "aliases": [
         "mistral-large-3",
