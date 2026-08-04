@@ -235,20 +235,40 @@ class TestWorkflowToolsUTF8(unittest.IsolatedAsyncioTestCase):
 
         # Test the debug tool
         debug_tool = DebugIssueTool()
-        result = await debug_tool.execute(
-            {
-                "step": "Analyze NameError in data processing file",
-                "step_number": 1,
-                "total_steps": 1,
-                "next_step_required": False,
-                "findings": "Error detected during script execution",
-                "files_checked": ["/src/data_processor.py"],
-                "relevant_files": ["/src/data_processor.py"],
-                "hypothesis": ("Variable 'données' not defined - missing import"),
-                "confidence": "medium",
-                "model": "test-model",
-            }
-        )
+        # D-B (2026-08-04, Mario ruling): `debug` calls an expert model but does NOT
+        # include file content in the expert prompt. Passing relevant_files therefore
+        # used to return a confident answer written WITHOUT them, while reporting
+        # file_context.type == "fully_embedded". It now refuses.
+        #
+        # This test previously asserted that silent false success, so the upstream suite
+        # had codified the defect as expected behaviour. It now asserts the refusal.
+        # UTF-8-through-the-expert-path coverage is retained by the sibling tests
+        # test_analyze_tool_utf8_response and test_codereview_tool_french_findings,
+        # whose tools deliver files correctly and are unaffected.
+        from tools.shared.exceptions import ToolExecutionError
+
+        with self.assertRaises(ToolExecutionError) as ctx:
+            await debug_tool.execute(
+                {
+                    "step": "Analyze NameError in data processing file",
+                    "step_number": 1,
+                    "total_steps": 1,
+                    "next_step_required": False,
+                    "findings": "Error detected during script execution",
+                    "files_checked": ["/src/data_processor.py"],
+                    "relevant_files": ["/src/data_processor.py"],
+                    "hypothesis": ("Variable 'données' not defined - missing import"),
+                    "confidence": "medium",
+                    "model": "test-model",
+                }
+            )
+
+        payload = json.loads(str(ctx.exception))
+        self.assertEqual(payload["error"], "FILE DELIVERY NOT SUPPORTED BY THIS TOOL (defect D-B)")
+        self.assertEqual(payload["files_rejected"], ["/src/data_processor.py"])
+        # It must NOT claim to have embedded anything.
+        self.assertNotIn("file_context", payload)
+        return
 
         # Checks
         self.assertIsNotNone(result)

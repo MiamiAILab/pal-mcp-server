@@ -19,6 +19,7 @@ from typing import Any, Optional
 from tools.shared.base_models import ToolRequest
 from tools.shared.base_tool import BaseTool
 from tools.shared.exceptions import ToolExecutionError
+from utils.model_identity import ServedModelMismatchError
 from tools.shared.schema_builders import SchemaBuilder
 
 
@@ -648,6 +649,11 @@ class SimpleTool(BaseTool):
                 model_name = model_info.get("model_name")
                 if model_name:
                     metadata["model_used"] = model_name
+                    # D-C: `model_used` above is self._current_model_name — the REQUEST.
+                    # Surface what the provider actually served and assert on it.
+                    from utils.model_identity import stamp_served_model
+
+                    stamp_served_model(metadata, model_name, model_info.get("model_response"), self.get_name())
                 provider = model_info.get("provider")
                 if provider:
                     # Handle both provider objects and string values
@@ -765,6 +771,11 @@ class SimpleTool(BaseTool):
                 model_name = model_info.get("model_name")
                 if model_name:
                     metadata["model_used"] = model_name
+                    # D-C: `model_used` above is self._current_model_name — the REQUEST.
+                    # Surface what the provider actually served and assert on it.
+                    from utils.model_identity import stamp_served_model
+
+                    stamp_served_model(metadata, model_name, model_info.get("model_response"), self.get_name())
                 provider = model_info.get("provider")
                 if provider:
                     # Handle both provider objects and string values
@@ -785,6 +796,11 @@ class SimpleTool(BaseTool):
                 continuation_offer=continuation_offer,
                 metadata=metadata,
             )
+        except ServedModelMismatchError:
+            # D-C: a substituted seat must NEVER be swallowed into a "success" fallback.
+            # This handler otherwise turns any failure here into status="success" with no
+            # metadata — the same fail-toward-reassurance shape D-B/D-C are about.
+            raise
         except Exception:
             # Fallback to simple success if continuation offer fails
             return ToolOutput(status="success", content=content, content_type="text")
