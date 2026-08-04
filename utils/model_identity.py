@@ -47,6 +47,32 @@ import re
 _SNAPSHOT_TAIL = re.compile(r"^[0-9][0-9._-]*$")
 
 
+# === NOT_REPORTED BY DESIGN vs BY FAILURE (ruled 2026-08-04, Sol#1 question) =========
+# A path that STRUCTURALLY cannot report a served model id is a different world from a
+# path that should have reported one and did not. Both yield "no served identity", and
+# collapsing them would (a) send operators chasing a repair that does not exist, and
+# (b) let a genuine failure hide inside an expected condition.
+#
+# THE SAFETY PROPERTY, and it is the whole reason this is a declared list and not an
+# inference: by-design status is ASSERTED HERE, never derived from a missing field.
+# If absence itself were treated as "by design", every real reporting failure would
+# silently reclassify as expected — reintroducing exactly the silent-pass hazard this
+# module exists to remove.
+#
+# Current member: `clink`, which bridges to external AI CLIs as a SUBPROCESS. It
+# overrides execute() and never enters the provider metadata path at all, so
+# response.model does not exist for it in any form.
+#
+# CONSEQUENCE FOR VERDICTS (fail-closed on the property that actually matters):
+# an UNVERIFIABLE_BY_DESIGN seat is NO_VOTE for cross-family consensus and Tier-H
+# verdict independence — a seat whose family cannot be established cannot serve as an
+# independent family vote. It is NOT an outage: it is excluded from the verifiable
+# quorum and reported distinctly rather than halting the roster, and it stays usable
+# for non-verdict work where family independence is not the property being claimed.
+# Citable as "content delivered; seat NOT REPORTED" — NEVER as "verified <family> seat".
+UNVERIFIABLE_BY_DESIGN_TOOLS = frozenset({"clink"})
+
+
 class ServedModelMismatchError(ValueError):
     """The provider served a different seat than the one requested.
 
@@ -130,7 +156,10 @@ def stamp_served_model_id(metadata: dict, requested: str, served: str | None, to
     """
     metadata["served_model"] = served
     if not served:
-        metadata["served_model_status"] = "NOT_REPORTED"
+        # DECLARED structural inability vs an anomaly. Never inferred from absence.
+        metadata["served_model_status"] = (
+            "UNVERIFIABLE_BY_DESIGN" if tool_name in UNVERIFIABLE_BY_DESIGN_TOOLS else "NOT_REPORTED"
+        )
         return metadata
     if served_matches(requested, served):
         metadata["served_model_status"] = "VERIFIED"
