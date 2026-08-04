@@ -21,6 +21,7 @@ Features:
 """
 
 from utils.provider_timeout import generate_content_with_timeout
+from utils.model_identity import ServedModelMismatchError
 import json
 import logging
 import os
@@ -90,6 +91,12 @@ class BaseWorkflowMixin(ABC):
         self.work_history = []
         self.consolidated_findings = ConsolidatedFindings()
         self.initial_request = None
+        # D-C served-model identity is PER-REQUEST state on a singleton. If it were not
+        # reset, run N+1 could stamp run N's served_model — which is precisely the
+        # contamination shape behind the Selena 2026-08-01 self-contradictory metadata
+        # (model_used: sonar-deep-research paired with provider_used: openai).
+        self._served_model = None
+        self._expert_called = False
         # Subclass-specific per-request state (e.g. debug/consensus store_initial_issue)
         if hasattr(self, "initial_issue"):
             self.initial_issue = None
@@ -475,6 +482,56 @@ class BaseWorkflowMixin(ABC):
         This prevents wasting the CLI's limited context on intermediate steps while ensuring
         the final expert analysis has complete file context.
         """
+        # === D-B GUARD: refuse, never silently under-deliver. (GENESIS 2026-08-04, Mario ruling) ===
+        # A tool that calls an expert model but does NOT include files in the expert prompt
+        # (should_include_files_in_expert_prompt() == False) cannot honour relevant_files.
+        # Before this guard it accepted them, read them, reported
+        #   file_context: {"type": "fully_embedded"}
+        # and sent the expert model NOTHING — a silent false success. Reproduced live
+        # 2026-08-04 on thinkdeep (nonce absent, files_examined: []) and independently on
+        # audit-mini by Audrey, incl. debug. Latent upstream since 69a3121 (2025-06-21).
+        #
+        # WHY REFUSE RATHER THAN DELIVER (Mario's ruling, deliberate):
+        # adding should_include_files_in_expert_prompt() -> True here would make EVERY
+        # thinkdeep/debug call fleet-wide start shipping full file payloads. SOL-582
+        # establishes that audit-sized payloads exceed viable latency on this transport —
+        # that is why Audelia's gpt-5.4-pro reached the 900s ceiling. Delivering would
+        # convert silent-empty calls into TIMEOUTS across the fleet, including Orion, which
+        # default-routes substantive reasoning through thinkdeep and is Alan's production.
+        # Full delivery is deferred to Alan SM with the latency finding attached.
+        # Fail-loud changes no working call's behaviour and adds no latency.
+        if (
+            self.get_request_relevant_files(request)
+            and self.requires_expert_analysis()
+            and not self.should_include_files_in_expert_prompt()
+        ):
+            raise ToolExecutionError(
+                json.dumps(
+                    {
+                        "status": f"{self.get_name()}_failed",
+                        "error": "FILE DELIVERY NOT SUPPORTED BY THIS TOOL (defect D-B)",
+                        "detail": (
+                            f"`{self.get_name()}` calls an expert model but does not include file "
+                            "content in the expert prompt, so the files you passed in `relevant_files` "
+                            "would NOT reach the model. Refusing rather than returning a confident "
+                            "answer written without them."
+                        ),
+                        "files_rejected": list(self.get_request_relevant_files(request)),
+                        "what_to_do_instead": [
+                            "Use `chat` with `absolute_file_paths` — verified to deliver file content.",
+                            "Use `consensus` with `relevant_files` — has its own embed path and delivers.",
+                            "Or inline the material into `step`/`findings`; that text does reach the expert.",
+                        ],
+                        "note": (
+                            "Do not read a previous successful-looking call of this shape as having "
+                            "delivered files: before 2026-08-04 it reported file_context.type="
+                            "'fully_embedded' while sending the model nothing."
+                        ),
+                    },
+                    indent=2,
+                )
+            )
+
         continuation_id = self.get_request_continuation_id(request)
         is_final_step = not self.get_request_next_step_required(request)
         step_number = self.get_request_step_number(request)
@@ -1191,6 +1248,21 @@ class BaseWorkflowMixin(ABC):
                     "provider_used": provider_name,
                 }
 
+                # D-C: surface the SERVED model and assert it against the request.
+                # `model_used` above is request-side and can never detect a substituted
+                # seat; `served_model` comes from the provider's own response body.
+                # NOT_REPORTED is kept distinct from VERIFIED — "could not measure" is
+                # not "checked and fine". A mismatch raises rather than passing quietly.
+                if getattr(self, "_expert_called", False):
+                    from utils.model_identity import stamp_served_model_id
+
+                    stamp_served_model_id(
+                        metadata,
+                        resolved_model_name,
+                        getattr(self, "_served_model", None),
+                        self.get_name(),
+                    )
+
                 # Preserve existing metadata and add workflow metadata
                 if "metadata" not in response_data:
                     response_data["metadata"] = {}
@@ -1222,6 +1294,9 @@ class BaseWorkflowMixin(ABC):
                     f"model: {model_name}, provider: unknown"
                 )
 
+        except ServedModelMismatchError:
+            # D-C: a substituted seat is never a warning-and-continue.
+            raise
         except Exception as e:
             # Don't fail the workflow if metadata addition fails
             logger.warning(f"[WORKFLOW_METADATA] {self.get_name()}: Failed to add metadata: {e}")
@@ -1528,6 +1603,13 @@ class BaseWorkflowMixin(ABC):
                 thinking_mode=self.get_request_thinking_mode(request),
                 images=list(set(self.consolidated_findings.images)) if self.consolidated_findings.images else None,
             )
+
+            # D-C: capture the id the provider ACTUALLY served, for assertion at stamp time.
+            # Previously discarded here; metadata.model_used echoed the REQUEST on both paths.
+            from utils.model_identity import resolve_served_model
+
+            self._served_model = resolve_served_model(model_response)
+            self._expert_called = True
 
             if model_response.content:
                 content = model_response.content.strip()
