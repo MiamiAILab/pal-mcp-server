@@ -1,0 +1,75 @@
+# OpenRouter provider-drift audit — task-128 (Genesis; back-gated by Selena).
+#
+# WHY: OpenRouter silently reshuffles the served-provider pool under a pinned
+# model. A non-allowlisted (esp. non-Western / China-endpoint) provider can enter
+# a consensus seat's pool with NO code change, re-incurring the China-endpoint
+# exposure task-126 hit. PR #11 pinned today's instance; THIS gate stops recurrence.
+#
+# Tier A (this file, ENFORCING): deterministic, no-network, fail-closed PR merge
+#   gate. Runs scripts/audit/provider_drift_static.py against conf/openrouter_models.json
+#   and the human-reviewed allowlist in conf/policy/. exit 1 = BLOCK, exit 2 =
+#   malformed/absent policy = BLOCK. No secrets, no vendor calls.
+# Tier B (scheduled live probe): stubbed until scripts/audit/provider_drift_live.py
+#   lands + Azul classifies it separately (Complina 2026-07-18: Tier-B out of scope
+#   here). NEVER gates a PR merge; network flake = INCONCLUSIVE, not BLOCK.
+#
+# Complina classification 2026-07-18: TIER=S, FAIL-CLOSED=BLOCK MERGE, 2-eye
+# (@complina + @selena). See conf/policy/provider_jurisdictions.json for the allowlist.
+
+name: provider-drift-audit
+
+on:
+  pull_request:
+    paths:
+      - "conf/openrouter_models.json"
+      - "conf/policy/**"
+      - "scripts/audit/**"
+      - ".github/workflows/provider-drift-audit.yml"
+  schedule:
+    - cron: "17 8 * * *"   # nightly 08:17 UTC — Tier B live probe (stubbed)
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  tier-a-static:
+    # Deterministic fail-closed merge gate. No network, no secrets.
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # need origin/main for the route-broadening baseline
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Baseline catalog (origin/main) for route-broadening diff
+        run: |
+          git show origin/main:conf/openrouter_models.json > /tmp/base.json 2>/dev/null \
+            || echo '{"models":[]}' > /tmp/base.json
+      - name: Tier A unit tests (planted-provider FAILS / certified set PASSES)
+        run: |
+          python3 scripts/audit/test_provider_drift_static.py
+      - name: Tier A static drift gate (fail-closed — BLOCK on non-allowlisted provider)
+        run: |
+          python3 scripts/audit/provider_drift_static.py --baseline /tmp/base.json
+
+  tier-b-live:
+    # Scheduled/dispatch only — NEVER gates a PR merge. Stubbed until
+    # provider_drift_live.py lands (Azul-classified follow-up). No secret is
+    # consumed while stubbed.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tier B live provider probe (stub)
+        run: |
+          if [ -f scripts/audit/provider_drift_live.py ]; then
+            python3 scripts/audit/provider_drift_live.py --json || true
+          else
+            echo "provider_drift_live.py not yet built — Tier B stubbed (Azul-classified follow-up)."
+          fi
