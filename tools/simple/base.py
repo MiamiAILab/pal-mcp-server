@@ -653,7 +653,16 @@ class SimpleTool(BaseTool):
                     # Surface what the provider actually served and assert on it.
                     from utils.model_identity import stamp_served_model
 
-                    stamp_served_model(metadata, model_name, model_info.get("model_response"), self.get_name())
+                    # provider is passed so an ALIAS request (`opus`, `codex`, `k2.7`) can be
+                    # resolved to the canonical id the provider actually serves. Without it the
+                    # guard false-rejects healthy seats (fixed 2026-08-11).
+                    stamp_served_model(
+                        metadata,
+                        model_name,
+                        model_info.get("model_response"),
+                        self.get_name(),
+                        model_info.get("provider"),
+                    )
                 provider = model_info.get("provider")
                 if provider:
                     # Handle both provider objects and string values
@@ -775,7 +784,16 @@ class SimpleTool(BaseTool):
                     # Surface what the provider actually served and assert on it.
                     from utils.model_identity import stamp_served_model
 
-                    stamp_served_model(metadata, model_name, model_info.get("model_response"), self.get_name())
+                    # provider is passed so an ALIAS request (`opus`, `codex`, `k2.7`) can be
+                    # resolved to the canonical id the provider actually serves. Without it the
+                    # guard false-rejects healthy seats (fixed 2026-08-11).
+                    stamp_served_model(
+                        metadata,
+                        model_name,
+                        model_info.get("model_response"),
+                        self.get_name(),
+                        model_info.get("provider"),
+                    )
                 provider = model_info.get("provider")
                 if provider:
                     # Handle both provider objects and string values

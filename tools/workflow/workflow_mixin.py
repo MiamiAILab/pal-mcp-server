@@ -1261,6 +1261,7 @@ class BaseWorkflowMixin(ABC):
                         resolved_model_name,
                         getattr(self, "_served_model", None),
                         self.get_name(),
+                        provider,
                     )
 
                 # Preserve existing metadata and add workflow metadata

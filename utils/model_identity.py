@@ -107,8 +107,40 @@ def normalize_model_id(model_id) -> str:
     return m
 
 
-def served_matches(requested: str, served: str) -> bool:
-    """True if `served` is the same seat as `requested`, allowing only snapshot suffixes."""
+def resolve_requested_alias(requested: str, provider=None) -> str:
+    """Map a caller-facing ALIAS to the provider's own canonical model id.
+
+    ADDED 2026-08-11 (Genesis) — closes a FALSE-REJECTION defect in the 2026-08-04
+    D-C guard. Callers legitimately request seats by ALIAS: `opus`, `codex`, `k2.7`,
+    `flash`. The provider then serves the CANONICAL id — `anthropic/claude-opus-4.8`,
+    `gpt-5.3-codex`, `moonshotai/kimi-k2.7-code`, `gemini-3.5-flash`. The original
+    `served_matches` compared the alias STRING against the canonical id, so every
+    alias that is not a bare prefix of its own canonical name was reported as a
+    SILENT SEAT SUBSTITUTION. `gpt-5.4` passed only by luck (its served snapshot
+    `gpt-5.4-2026-03-05` happens to be prefix-extended).
+
+    That took real seats out of real panels — `opus` is a consensus-roster seat and
+    could never pass the guard when requested by its alias. Observed live 2026-08-11
+    (Visionary 4 consecutive degraded passes; Marshall 3 false rejections; Complina
+    3 sessions on the Gemini fallback).
+
+    Direction matters: this defect is fail-CLOSED (healthy seat rejected), never
+    fail-open. It cannot manufacture a false ACCEPT — see the module test.
+
+    Degrades to the raw string on any resolver failure: an unresolvable alias must
+    stay a mismatch, never become a silent pass.
+    """
+    if not isinstance(requested, str) or provider is None:
+        return requested
+    try:
+        resolved = provider._resolve_model_name(requested)
+    except Exception:  # noqa: BLE001 — a resolver failure must not weaken the guard
+        return requested
+    return resolved if isinstance(resolved, str) and resolved.strip() else requested
+
+
+def _same_seat(requested: str, served: str) -> bool:
+    """Pure string comparison of two model ids, allowing only snapshot suffixes."""
     r, s = normalize_model_id(requested), normalize_model_id(served)
     if not r or not s:
         return False
@@ -120,6 +152,24 @@ def served_matches(requested: str, served: str) -> bool:
             tail = b[len(a):].lstrip("-_:@")
             if tail and _SNAPSHOT_TAIL.match(tail):
                 return True
+    return False
+
+
+def served_matches(requested: str, served: str, provider=None) -> bool:
+    """True if `served` is the same seat as `requested`, allowing only snapshot suffixes.
+
+    When `provider` is supplied the REQUEST is also compared in its canonical form, so
+    an alias matches the canonical id the provider actually served. Only the REQUEST is
+    canonicalised — never the served id — so this can add matches ONLY between an alias
+    and its own declared canonical name. A genuine substitution (`gpt-5.4` served as
+    `gpt-5.4-mini`) is still a mismatch, because canonicalising `gpt-5.4` yields
+    `gpt-5.4` and the capability suffix still fails the snapshot rule.
+    """
+    if _same_seat(requested, served):
+        return True
+    canonical = resolve_requested_alias(requested, provider)
+    if canonical != requested and _same_seat(canonical, served):
+        return True
     return False
 
 
@@ -139,16 +189,20 @@ def resolve_served_model(model_response) -> str | None:
     return served.strip()
 
 
-def stamp_served_model(metadata: dict, requested: str, model_response, tool_name: str = "") -> dict:
+def stamp_served_model(metadata: dict, requested: str, model_response, tool_name: str = "", provider=None) -> dict:
     """Add served_model + served_model_status to `metadata`; raise on a genuine mismatch.
 
     Raises:
         ValueError: the provider served a different seat than the one requested.
     """
-    return stamp_served_model_id(metadata, requested, resolve_served_model(model_response), tool_name)
+    return stamp_served_model_id(
+        metadata, requested, resolve_served_model(model_response), tool_name, provider
+    )
 
 
-def stamp_served_model_id(metadata: dict, requested: str, served: str | None, tool_name: str = "") -> dict:
+def stamp_served_model_id(
+    metadata: dict, requested: str, served: str | None, tool_name: str = "", provider=None
+) -> dict:
     """Same as stamp_served_model but takes the already-extracted served id.
 
     Raises:
@@ -161,7 +215,13 @@ def stamp_served_model_id(metadata: dict, requested: str, served: str | None, to
             "UNVERIFIABLE_BY_DESIGN" if tool_name in UNVERIFIABLE_BY_DESIGN_TOOLS else "NOT_REPORTED"
         )
         return metadata
-    if served_matches(requested, served):
+    # Surface the canonical form the alias resolves to. An auditor reading this
+    # metadata must be able to see WHY an alias and a canonical id were judged the
+    # same seat, rather than take the verdict on trust.
+    canonical = resolve_requested_alias(requested, provider)
+    if canonical != requested:
+        metadata["requested_model_canonical"] = canonical
+    if served_matches(requested, served, provider):
         metadata["served_model_status"] = "VERIFIED"
         return metadata
     metadata["served_model_status"] = "MISMATCH"
@@ -169,8 +229,16 @@ def stamp_served_model_id(metadata: dict, requested: str, served: str | None, to
         "SERVED-MODEL MISMATCH (defect D-C) — the provider served a different seat "
         f"than the one requested{' in ' + tool_name if tool_name else ''}.\n"
         f"  requested : {requested}\n"
-        f"  served    : {served}\n"
-        "This call is NOT a valid cross-family pass. Do not record it as one, and do not "
+        + (f"  canonical : {canonical}   (alias resolved)\n" if canonical != requested else "")
+        + f"  served    : {served}\n"
+        + (
+            "  NOTE: no provider was supplied to the guard, so an ALIAS could not be resolved to "
+            "its canonical id. If 'requested' is an alias, re-check before treating this as a "
+            "substitution.\n"
+            if provider is None
+            else ""
+        )
+        + "This call is NOT a valid cross-family pass. Do not record it as one, and do not "
         "attribute the response to the requested model or its family. Cross-family "
         "consensus is a Tier-H control primitive; a substituted seat silently voids it."
     )
