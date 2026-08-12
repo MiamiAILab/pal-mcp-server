@@ -20,6 +20,7 @@ as defined by the MCP protocol.
 
 import asyncio
 import atexit
+import copy
 import logging
 import os
 import sys
@@ -430,6 +431,27 @@ def configure_providers():
         else:
             logger.debug("OpenAI API key is placeholder value")
 
+
+    # ── C4 CONTAINMENT 2026-08-06 — non-certified provider deny-guard ────────────
+    # Incident: blackmac zen gateway logged 192 POSTs to non-certified providers
+    # (together 114 / moonshot 36 / deepseek 18 / minimax 12 / bigmodel 9 / x.ai 3).
+    # Grok is SECURITY-DISABLED fleet-wide (Mario, 2026-07-03) yet XAI_API_KEY was
+    # being injected. Keys arrive from Doppler at runtime, so the guard nulls them
+    # here rather than in a .env. REVERSIBLE: delete this block to restore.
+    for _c4_var in (
+        "XAI_API_KEY",          # Grok — security-disabled fleet-wide
+        "MINIMAX_API_KEY",
+        "MOONSHOT_API_KEY",
+        "ZHIPU_API_KEY",
+        "DASHSCOPE_API_KEY",    # Alibaba
+        "CUSTOM_API_URL",       # pointed at https://api.deepseek.com/v1
+        "CUSTOM_API_KEY",
+    ):
+        if os.environ.get(_c4_var):
+            os.environ[_c4_var] = ""
+            logger.warning("C4 CONTAINMENT: %s suppressed — non-certified provider", _c4_var)
+    # ── end C4 containment ──────────────────────────────────────────────────────
+
     # Check for X.AI API key
     xai_key = get_env("XAI_API_KEY")
     if xai_key and xai_key != "your_xai_api_key_here":
@@ -801,7 +823,39 @@ async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[TextCon
     # Route to AI-powered tools that require Gemini API calls
     if name in TOOLS:
         logger.info(f"Executing tool '{name}' with {len(arguments)} parameter(s)")
-        tool = TOOLS[name]
+        # PER-CALL TOOL INSTANCE (Genesis, 2026-08-12 — zen-seat goal-pack).
+        #
+        # THE DEFECT: TOOLS holds ONE instance per tool for the process lifetime
+        # ("stateless design" — it is not). Both tool paths keep PER-CALL state on
+        # `self`: tools/simple/base.py sets self._current_model_name / self._model_context
+        # / self._current_arguments; workflow_mixin keeps work_history /
+        # consolidated_findings / _served_model. MCP dispatches CallToolRequests
+        # CONCURRENTLY, so two overlapping calls share one instance and the later
+        # starter overwrites the earlier one's model identity mid-flight.
+        #
+        # Two observed shapes, and the second is the dangerous one:
+        #   (a) fail-CLOSED — call A serves gpt-5.4 but stamps against call B's
+        #       requested `gemini-3.1-pro-preview` -> spurious SERVED-MODEL MISMATCH.
+        #       This is the 2026-08-12 Lauren/Azul "voided Gemini seat": the seat was
+        #       healthy the whole time; the guard was reading another call's request.
+        #   (b) fail-OPEN — if B overwrites `self._model_context` between A's model
+        #       resolution and A's provider call, A is SERVED BY B's provider and
+        #       stamped with B's model id, so request and served AGREE and the call
+        #       passes VERIFIED while carrying another family's answer. That is a
+        #       silent cross-family substitution, i.e. exactly the Tier-H control
+        #       primitive that cross-family consensus depends on, voided invisibly.
+        #
+        # WHY NOT "reset at the top of each call" (the SOL-338 remedy in
+        # workflow_mixin._reset_workflow_state): a reset fixes SEQUENTIAL carry-over
+        # but under concurrency it is itself the weapon — call B's reset wipes call
+        # A's live state. Per-call isolation is the property that was actually needed;
+        # the reset stays as defence-in-depth for in-process/direct callers.
+        #
+        # copy.copy (not type(tool)()) is deliberate: a fresh __dict__ per call, with
+        # no __init__ side effects re-run (CLinkTool reloads CLI configs from disk in
+        # __init__). Shared sub-objects are the read-only config ones; every mutable
+        # per-call accumulator is REBOUND (not mutated in place) before first use.
+        tool = copy.copy(TOOLS[name])
 
         # EARLY MODEL RESOLUTION AT MCP BOUNDARY
         # Resolve model before passing to tool - this ensures consistent model handling
