@@ -1,4 +1,23 @@
-mcp>=1.0.0
+# mcp UPPER BOUND ADDED 2026-08-23 (SOL-1095, Zen plan Phase 1 item 0).
+# MCP Python SDK v2.0.0 (2026-07-28) REMOVED the @server.list_tools() decorator,
+# which server.py:678 depends on. `mcp>=1.0.0` was unbounded, so any fresh resolve
+# — a new host, a rebuilt venv, either auditor box — installed 2.x and crashed at
+# import. We were running only because the existing venvs predate that release
+# (verified: .zen_venv holds mcp 1.10.1). Removing the <2 cap requires migrating
+# server.py off the removed decorators first.
+#
+# FLOOR DELIBERATELY LEFT AT 1.0.0, NOT RAISED TO THE SDK'S SUGGESTED 1.28:
+# 1.10.1 is the version we actually run and the only one carrying runtime evidence.
+# Raising the floor to 1.28 would put this file in direct contradiction with
+# requirements.lock. The cap is the fix; the floor is not.
+mcp>=1.0.0,<2
+
+# ⚠️ THE CAP ABOVE IS NECESSARY BUT NOT SUFFICIENT — PROVISION FROM requirements.lock.
+# Measured 2026-08-23: a fresh resolve of this file differs from the running venv in
+# 32 packages, including two-major jumps — openai 1.93.0 -> 3.3.1, google-genai
+# 1.24.0 -> 2.19.0, starlette 0.47.1 -> 1.6.0. `openai` and `google-genai` below are
+# just as unbounded as `mcp` was; mcp was the one we happened to find. server.py
+# imports clean under that fresh set, but an import is not a provider call.
 google-genai>=1.19.0
 openai>=1.55.2  # Minimum version for httpx 0.28.0 compatibility
 pydantic>=2.0.0

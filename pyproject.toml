@@ -4,7 +4,10 @@ version = "9.8.2"
 description = "AI-powered MCP server with multiple model providers"
 requires-python = ">=3.9"
 dependencies = [
-    "mcp>=1.0.0",
+    # Upper bound added 2026-08-23 — SDK v2.0.0 removed @server.list_tools()
+    # (server.py:678). See requirements.txt for the full rationale, and
+    # requirements.lock for the set a new host should actually be built from.
+    "mcp>=1.0.0,<2",
     "google-genai>=1.19.0",
     "openai>=1.55.2",
     "pydantic>=2.0.0",
