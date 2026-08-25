@@ -6,6 +6,13 @@ import pytest
 
 from tools.clink import CLinkTool
 
+# SOL-1096 / Selena FINDING-002: these tests instantiate CLinkTool directly and
+# spawn real vendor CLIs (claude/gemini/codex) with the full inherited environment,
+# bypassing both the server tool filter and the C4 egress gateway. clink is
+# structurally disabled; executing it from the test suite is unsafe. Unskipping
+# requires the SOL-1096 revival preconditions and a security-gate review.
+pytestmark = pytest.mark.skip(reason="SOL-1096: clink structurally disabled; unsafe to execute (Selena FINDING-002)")
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio

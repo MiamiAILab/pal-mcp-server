@@ -29,7 +29,7 @@ class TestDisabledTools:
             assert parse_disabled_tools_env() == STRUCTURALLY_DISABLED_TOOLS
 
     def test_parse_disabled_tools_not_set(self):
-        """Unset variable returns empty set."""
+        """Unset variable still yields the structural deny set (SOL-1096)."""
         with patch.dict(os.environ, {}, clear=True):
             # Ensure DISABLED_TOOLS is not in environment
             if "DISABLED_TOOLS" in os.environ:
