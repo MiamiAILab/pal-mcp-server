@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from server import (
+    STRUCTURALLY_DISABLED_TOOLS,
     apply_tool_filter,
     parse_disabled_tools_env,
     validate_disabled_tools,
@@ -23,9 +24,9 @@ class TestDisabledTools:
     """Test suite for DISABLED_TOOLS functionality."""
 
     def test_parse_disabled_tools_empty(self):
-        """Empty string returns empty set (no tools disabled)."""
+        """Empty string still yields the structural deny set (SOL-1096)."""
         with patch.dict(os.environ, {"DISABLED_TOOLS": ""}):
-            assert parse_disabled_tools_env() == set()
+            assert parse_disabled_tools_env() == STRUCTURALLY_DISABLED_TOOLS
 
     def test_parse_disabled_tools_not_set(self):
         """Unset variable returns empty set."""
@@ -33,27 +34,27 @@ class TestDisabledTools:
             # Ensure DISABLED_TOOLS is not in environment
             if "DISABLED_TOOLS" in os.environ:
                 del os.environ["DISABLED_TOOLS"]
-            assert parse_disabled_tools_env() == set()
+            assert parse_disabled_tools_env() == STRUCTURALLY_DISABLED_TOOLS
 
     def test_parse_disabled_tools_single(self):
         """Single tool name parsed correctly."""
         with patch.dict(os.environ, {"DISABLED_TOOLS": "debug"}):
-            assert parse_disabled_tools_env() == {"debug"}
+            assert parse_disabled_tools_env() == {"debug"} | STRUCTURALLY_DISABLED_TOOLS
 
     def test_parse_disabled_tools_multiple(self):
         """Multiple tools with spaces parsed correctly."""
         with patch.dict(os.environ, {"DISABLED_TOOLS": "debug, analyze, refactor"}):
-            assert parse_disabled_tools_env() == {"debug", "analyze", "refactor"}
+            assert parse_disabled_tools_env() == {"debug", "analyze", "refactor"} | STRUCTURALLY_DISABLED_TOOLS
 
     def test_parse_disabled_tools_extra_spaces(self):
         """Extra spaces and empty items handled correctly."""
         with patch.dict(os.environ, {"DISABLED_TOOLS": " debug , , analyze ,  "}):
-            assert parse_disabled_tools_env() == {"debug", "analyze"}
+            assert parse_disabled_tools_env() == {"debug", "analyze"} | STRUCTURALLY_DISABLED_TOOLS
 
     def test_parse_disabled_tools_duplicates(self):
         """Duplicate entries handled correctly (set removes duplicates)."""
         with patch.dict(os.environ, {"DISABLED_TOOLS": "debug,analyze,debug"}):
-            assert parse_disabled_tools_env() == {"debug", "analyze"}
+            assert parse_disabled_tools_env() == {"debug", "analyze"} | STRUCTURALLY_DISABLED_TOOLS
 
     def test_tool_filtering_logic(self):
         """Test the complete filtering logic using the actual server functions."""
@@ -135,6 +136,19 @@ class TestDisabledTools:
         ],
     )
     def test_parse_disabled_tools_parametrized(self, env_value, expected):
-        """Parametrized tests for various input formats."""
+        """Parametrized tests for various input formats (structural set always unioned)."""
         with patch.dict(os.environ, {"DISABLED_TOOLS": env_value}):
-            assert parse_disabled_tools_env() == expected
+            assert parse_disabled_tools_env() == expected | STRUCTURALLY_DISABLED_TOOLS
+
+    def test_structural_disable_cannot_be_subtracted(self):
+        """SOL-1096: a dotfile listing other tools (or nothing) never re-enables clink."""
+        assert "clink" in STRUCTURALLY_DISABLED_TOOLS
+        with patch.dict(os.environ, {"DISABLED_TOOLS": "analyze,refactor"}):
+            assert "clink" in parse_disabled_tools_env()
+        with patch.dict(os.environ, {}, clear=True):
+            assert "clink" in parse_disabled_tools_env()
+        # And the filter actually drops it (clink is not ESSENTIAL)
+        tools = {"clink": MockTool("clink"), "chat": MockTool("chat"), "version": MockTool("version")}
+        enabled = apply_tool_filter(tools, parse_disabled_tools_env())
+        assert "clink" not in enabled
+        assert "chat" in enabled
