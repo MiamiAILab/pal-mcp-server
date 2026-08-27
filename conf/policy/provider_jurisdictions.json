@@ -1,0 +1,102 @@
+{
+  "_README": {
+    "purpose": "AXIS 2 (inference-broker / residency) jurisdiction classification for OpenRouter SUB-PROVIDERS. Consumed by scripts/audit/provider_drift_static.py (Tier A). This is the MODERATE-tier control: a Chinese-LINEAGE seat may serve MODERATE work only if every provider in its openrouter_provider_route.only is classified 'western' here with a CURRENT (non-expired) review. Broker classification NEVER upgrades model lineage (Axis 1) — see conf/policy/model_lineage.json and governance/2026-07-13__llm-routing-jurisdiction-policy.md (CR-001, policy sections 1/4/5A/6).",
+    "canonical_policy": "governance/2026-07-13__llm-routing-jurisdiction-policy.md",
+    "classes": {
+      "western": "Non-Chinese-lineage infra provider domiciled in US/EU/UK/Canada-aligned trusted jurisdiction. Only 'western' + non-expired is valid inside a protected seat's `only` list.",
+      "prc": "PRC-owned/domiciled. Never valid in a protected seat's `only`. BLOCK.",
+      "unknown": "Unclassified / unclear beneficial ownership. Treated as NON-WESTERN for gating (fail-closed). BLOCK if used by a protected seat.",
+      "restricted": "Other sanctioned/restricted jurisdiction. BLOCK."
+    },
+    "hard_rules": [
+      "Every provider slug appearing in ANY seat's openrouter_provider_route.only MUST have an entry here. Missing == unknown == BLOCK.",
+      "review_expires_at < today AND provider is used by a protected seat => BLOCK (stale == non-compliant). Unused stale => WARN only.",
+      "No runtime WHOIS/ASN/geo inference. Human-reviewed registry + expiry ONLY.",
+      "CODEOWNERS review by @complina + @selena required to change any classification (jurisdiction/compliance + enforcement-surface)."
+    ],
+    "review_window_days": 92,
+    "note_on_unknowns": "morph, parasail, gmicloud are currently in live `only` lists (qwen seat) but are UNVERIFIED as of seeding. They are classified 'unknown' -> Tier A will BLOCK the qwen seat until Complina/Selena classify them OR they are removed from the qwen `only` list. This is the fail-closed default working as intended; resolve at PR review, do not pre-classify western without evidence."
+  },
+  "providers": {
+    "deepinfra": {
+      "jurisdiction_class": "western",
+      "ownership_basis": "US (DeepInfra Inc., Palo Alto CA)",
+      "evidence": ["PENDING-COMPLINA: DeepInfra corporate domicile confirmation", "referenced in GENESIS-098 Western-pin commit 7c82f75"],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-10-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "atlas-cloud": {
+      "jurisdiction_class": "western",
+      "ownership_basis": "PENDING-COMPLINA verification of Atlas Cloud domicile",
+      "evidence": ["referenced in GENESIS-098 Western-pin commit 7c82f75"],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-10-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "venice": {
+      "jurisdiction_class": "western",
+      "ownership_basis": "US (Venice.ai / Erik Voorhees)",
+      "evidence": ["PENDING-COMPLINA"],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-10-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "digitalocean": {
+      "jurisdiction_class": "western",
+      "ownership_basis": "US (DigitalOcean Holdings Inc., NYSE: DOCN)",
+      "evidence": ["public company, US-domiciled"],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-10-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "google-vertex": {
+      "jurisdiction_class": "western",
+      "ownership_basis": "US (Google LLC / Alphabet)",
+      "evidence": ["public company, US-domiciled"],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-10-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "sambanova": {
+      "jurisdiction_class": "western",
+      "ownership_basis": "US (SambaNova Systems Inc., Palo Alto CA)",
+      "evidence": ["PENDING-COMPLINA"],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-10-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "friendli": {
+      "jurisdiction_class": "unknown",
+      "ownership_basis": "FriendliAI — origin/domicile UNVERIFIED (FriendliAI has ROK/Korea roots; Korea is a Western-aligned trusted jurisdiction but this requires Complina confirmation before treating as 'western')",
+      "evidence": [],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-08-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "parasail": {
+      "jurisdiction_class": "unknown",
+      "ownership_basis": "UNVERIFIED — no confirmed domicile",
+      "evidence": [],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-08-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "morph": {
+      "jurisdiction_class": "unknown",
+      "ownership_basis": "UNVERIFIED — no confirmed domicile",
+      "evidence": [],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-08-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    },
+    "gmicloud": {
+      "jurisdiction_class": "unknown",
+      "ownership_basis": "UNVERIFIED — GMI Cloud domicile not confirmed",
+      "evidence": [],
+      "reviewed_at": "2026-07-13",
+      "review_expires_at": "2026-08-13",
+      "reviewer": "genesis-seed-PENDING-complina"
+    }
+  }
+}

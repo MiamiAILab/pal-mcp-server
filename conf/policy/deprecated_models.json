@@ -1,0 +1,16 @@
+{
+  "_README": {
+    "purpose": "Deprecated / removed model slugs + aliases that MUST NOT be wired in conf/openrouter_models.json. Tier A BLOCKs if any listed slug or alias appears as a live seat. Sources: roster-refresh removals + upstream deprecations. Genesis maintains on roster change.",
+    "canonical_policy": "governance/2026-07-13__llm-routing-jurisdiction-policy.md (section 3c Removed, section 5.F stale-alias hygiene)"
+  },
+  "deprecated": [
+    { "slug": "x-ai/grok-4",          "reason": "Grok/xAI removed 2026-07-03 — key deleted, registries stripped (policy 3c/5.F).", "removed_at": "2026-07-03" },
+    { "slug": "x-ai/grok-4.1-fast",   "reason": "Grok/xAI removed 2026-07-03.", "removed_at": "2026-07-03" }
+  ],
+  "deprecated_aliases": [
+    "grok", "grok-4", "grok4", "grok-4.1-fast-openrouter", "grok-4.1-openrouter"
+  ],
+  "deprecated_slug_prefixes": [
+    "x-ai/"
+  ]
+}
