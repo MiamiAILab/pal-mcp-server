@@ -14,6 +14,7 @@ can sign VERDICT_MET:
 Run: python3 -m pytest scripts/audit/test_provider_drift_static.py -v
 (stdlib-only fallback runner at bottom if pytest unavailable.)
 """
+
 from __future__ import annotations
 
 import copy
@@ -48,8 +49,7 @@ QUAR = {"quarantined": []}
 
 
 def _run(catalog, baseline=None, lineage=None):
-    return g.check_catalog(catalog, lineage or LINEAGE, WESTERN_PROV, DEPRECATED,
-                           QUAR, TODAY, baseline)
+    return g.check_catalog(catalog, lineage or LINEAGE, WESTERN_PROV, DEPRECATED, QUAR, TODAY, baseline)
 
 
 def _blocks(findings):
@@ -132,7 +132,8 @@ def test_high_nonwestern_lineage_blocks():
     # mislabel a china-prefix slug as HIGH western -> anti-smuggle forces chinese, then HIGH block
     lin["seats"]["qwen/qwen3.5-397b-a17b"] = {"lineage_jurisdiction": "western", "max_sensitivity": "HIGH"}
     seat = {
-        "model_name": "qwen/qwen3.5-397b-a17b", "aliases": ["qwen"],
+        "model_name": "qwen/qwen3.5-397b-a17b",
+        "aliases": ["qwen"],
         "openrouter_provider_route": {"only": ["deepinfra"], "allow_fallbacks": False},
     }
     b = _blocks(_run({"models": [seat]}, lineage=lin))

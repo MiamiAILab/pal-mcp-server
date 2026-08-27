@@ -28,6 +28,7 @@ Exit codes:
   2  usage/IO error
 WARN findings do not affect exit code.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -145,18 +146,24 @@ def check_catalog(
 
         # (d) deprecated / removed (incl. Grok stale-alias hygiene)
         if slug in dep_slugs or _matches_prefix(slug, dep_prefixes):
-            findings.append(Finding(BLOCK, "d-deprecated", slug,
-                "deprecated/removed slug still wired (stale-alias hygiene, policy 3c/5.F)"))
+            findings.append(
+                Finding(
+                    BLOCK,
+                    "d-deprecated",
+                    slug,
+                    "deprecated/removed slug still wired (stale-alias hygiene, policy 3c/5.F)",
+                )
+            )
             continue
         alias_hit = dep_aliases.intersection(aliases)
         if alias_hit:
-            findings.append(Finding(BLOCK, "d-deprecated", slug,
-                f"carries deprecated alias(es) {sorted(alias_hit)} (policy 5.F)"))
+            findings.append(
+                Finding(BLOCK, "d-deprecated", slug, f"carries deprecated alias(es) {sorted(alias_hit)} (policy 5.F)")
+            )
 
         # quarantine (live->static bridge)
         if slug in quar:
-            findings.append(Finding(BLOCK, "quarantine", slug,
-                "slug is quarantined by a confirmed live-audit finding"))
+            findings.append(Finding(BLOCK, "quarantine", slug, "slug is quarantined by a confirmed live-audit finding"))
 
         lj, ms, _entry = _resolve_lineage(slug, aliases, lineage)
         route = seat.get("openrouter_provider_route") or {}
@@ -167,46 +174,94 @@ def check_catalog(
 
         # Axis 1 (HIGH invariant): HIGH-eligible must be western lineage
         if ms == "HIGH" and lj != "western":
-            findings.append(Finding(BLOCK, "b-jurisdiction-HIGH", slug,
-                f"HIGH-eligible but lineage={lj} (Axis 1, policy 1). "
-                "Chinese/unknown lineage is excluded from HIGH — no broker exception."))
+            findings.append(
+                Finding(
+                    BLOCK,
+                    "b-jurisdiction-HIGH",
+                    slug,
+                    f"HIGH-eligible but lineage={lj} (Axis 1, policy 1). "
+                    "Chinese/unknown lineage is excluded from HIGH — no broker exception.",
+                )
+            )
 
         # Axis 2 (MODERATE invariant): china-lineage pin completeness
         if is_china:
             if not only:
-                findings.append(Finding(BLOCK, "b-lineage-pin", slug,
-                    "Chinese-lineage seat has empty/missing openrouter_provider_route.only "
-                    "(Axis 2 pin required — policy 4)."))
+                findings.append(
+                    Finding(
+                        BLOCK,
+                        "b-lineage-pin",
+                        slug,
+                        "Chinese-lineage seat has empty/missing openrouter_provider_route.only "
+                        "(Axis 2 pin required — policy 4).",
+                    )
+                )
             if allow_fb is True:
-                findings.append(Finding(BLOCK, "b-fallback", slug,
-                    "Chinese-lineage seat has allow_fallbacks=true — a PRC endpoint could be "
-                    "selected on fallback (fail-closed violation)."))
+                findings.append(
+                    Finding(
+                        BLOCK,
+                        "b-fallback",
+                        slug,
+                        "Chinese-lineage seat has allow_fallbacks=true — a PRC endpoint could be "
+                        "selected on fallback (fail-closed violation).",
+                    )
+                )
             if allow_fb is None and only:
-                findings.append(Finding(WARN, "b-fallback-implicit", slug,
-                    "route pin present but allow_fallbacks not explicitly false; set it explicitly."))
+                findings.append(
+                    Finding(
+                        WARN,
+                        "b-fallback-implicit",
+                        slug,
+                        "route pin present but allow_fallbacks not explicitly false; set it explicitly.",
+                    )
+                )
 
             # every provider in `only` must be western + non-expired
             for p in only:
                 pj = prov.get(p)
                 if pj is None:
-                    findings.append(Finding(BLOCK, "b-provider-unknown", slug,
-                        f"provider '{p}' in `only` has NO jurisdiction entry (unknown==non-Western, BLOCK)."))
+                    findings.append(
+                        Finding(
+                            BLOCK,
+                            "b-provider-unknown",
+                            slug,
+                            f"provider '{p}' in `only` has NO jurisdiction entry (unknown==non-Western, BLOCK).",
+                        )
+                    )
                     continue
                 cls = pj.get("jurisdiction_class", "unknown")
                 if cls != "western":
-                    findings.append(Finding(BLOCK, "b-provider-nonwestern", slug,
-                        f"provider '{p}' classified '{cls}' (not western) — BLOCK."))
+                    findings.append(
+                        Finding(
+                            BLOCK,
+                            "b-provider-nonwestern",
+                            slug,
+                            f"provider '{p}' classified '{cls}' (not western) — BLOCK.",
+                        )
+                    )
                     continue
                 exp = pj.get("review_expires_at")
                 if exp and _dt.date.fromisoformat(exp) < today:
-                    findings.append(Finding(BLOCK, "b-provider-stale", slug,
-                        f"provider '{p}' review expired {exp} and is used by a protected seat — BLOCK (stale==non-compliant)."))
+                    findings.append(
+                        Finding(
+                            BLOCK,
+                            "b-provider-stale",
+                            slug,
+                            f"provider '{p}' review expired {exp} and is used by a protected seat — BLOCK (stale==non-compliant).",
+                        )
+                    )
 
             # MODERATE-eligible china seat must be verifiably brokered (handled by the
             # provider checks above); LOW-only ambiguous seats are safe as-is.
             if ms == "MODERATE" and not only:
-                findings.append(Finding(BLOCK, "b-moderate-unbrokered", slug,
-                    "MODERATE-eligible Chinese-lineage seat without a verified Western broker pin (policy 4)."))
+                findings.append(
+                    Finding(
+                        BLOCK,
+                        "b-moderate-unbrokered",
+                        slug,
+                        "MODERATE-eligible Chinese-lineage seat without a verified Western broker pin (policy 4).",
+                    )
+                )
 
     # unused-but-stale provider entries => WARN only
     used = set()
@@ -216,8 +271,14 @@ def check_catalog(
     for pname, pj in prov.items():
         exp = pj.get("review_expires_at")
         if exp and _dt.date.fromisoformat(exp) < today and pname not in used:
-            findings.append(Finding(WARN, "provider-stale-unused", pname,
-                f"jurisdiction review expired {exp} (unused by any seat — WARN)."))
+            findings.append(
+                Finding(
+                    WARN,
+                    "provider-stale-unused",
+                    pname,
+                    f"jurisdiction review expired {exp} (unused by any seat — WARN).",
+                )
+            )
 
     # (f) diff-aware route-broadening vs baseline
     if baseline is not None:
@@ -238,15 +299,33 @@ def _broadening(baseline: dict, catalog: dict) -> list[Finding]:
         cr = seat.get("openrouter_provider_route") or {}
         b_only, c_only = set(br.get("only") or []), set(cr.get("only") or [])
         if c_only - b_only:
-            out.append(Finding(BLOCK, "f-broadening", slug,
-                f"PR ADDS provider(s) {sorted(c_only - b_only)} to `only` — route broadening, "
-                "requires deliberate review (fail-closed)."))
+            out.append(
+                Finding(
+                    BLOCK,
+                    "f-broadening",
+                    slug,
+                    f"PR ADDS provider(s) {sorted(c_only - b_only)} to `only` — route broadening, "
+                    "requires deliberate review (fail-closed).",
+                )
+            )
         if br.get("allow_fallbacks") is False and cr.get("allow_fallbacks") is True:
-            out.append(Finding(BLOCK, "f-broadening", slug,
-                "PR flips allow_fallbacks false->true — route broadening (fail-closed)."))
+            out.append(
+                Finding(
+                    BLOCK,
+                    "f-broadening",
+                    slug,
+                    "PR flips allow_fallbacks false->true — route broadening (fail-closed).",
+                )
+            )
         if (br.get("only") or []) and not (cr.get("only") or []):
-            out.append(Finding(BLOCK, "f-broadening", slug,
-                "PR empties/removes the `only` route pin — route broadening (fail-closed)."))
+            out.append(
+                Finding(
+                    BLOCK,
+                    "f-broadening",
+                    slug,
+                    "PR empties/removes the `only` route pin — route broadening (fail-closed).",
+                )
+            )
     return out
 
 
@@ -258,8 +337,12 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(__file__).resolve().parents[2]  # zen-mcp-server/
     ap.add_argument("--catalog", type=Path, default=root / "conf" / "openrouter_models.json")
     ap.add_argument("--policy-dir", type=Path, default=root / "conf" / "policy")
-    ap.add_argument("--baseline", type=Path, default=None,
-                    help="baseline catalog (e.g. origin/main copy) for route-broadening detection")
+    ap.add_argument(
+        "--baseline",
+        type=Path,
+        default=None,
+        help="baseline catalog (e.g. origin/main copy) for route-broadening detection",
+    )
     ap.add_argument("--as-of", default=None, help="override 'today' (YYYY-MM-DD) for expiry testing")
     ap.add_argument("--json", action="store_true", help="emit findings as JSON")
     args = ap.parse_args(argv)
@@ -276,22 +359,25 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR loading inputs: {exc}", file=sys.stderr)
         return 2
 
-    findings = check_catalog(catalog, lineage, jurisdictions, deprecated,
-                             quarantined, args.as_of, baseline)
+    findings = check_catalog(catalog, lineage, jurisdictions, deprecated, quarantined, args.as_of, baseline)
     blocks = [f for f in findings if f.level == BLOCK]
 
     if args.json:
-        print(json.dumps({
-            "result": "BLOCK" if blocks else "PASS",
-            "block_count": len(blocks),
-            "findings": [f.__dict__ for f in findings],
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "result": "BLOCK" if blocks else "PASS",
+                    "block_count": len(blocks),
+                    "findings": [f.__dict__ for f in findings],
+                },
+                indent=2,
+            )
+        )
     else:
         for f in findings:
             print(f)
         print("-" * 60)
-        print(f"RESULT: {'BLOCK' if blocks else 'PASS'}  "
-              f"({len(blocks)} block, {len(findings) - len(blocks)} warn)")
+        print(f"RESULT: {'BLOCK' if blocks else 'PASS'}  " f"({len(blocks)} block, {len(findings) - len(blocks)} warn)")
 
     return 1 if blocks else 0
 

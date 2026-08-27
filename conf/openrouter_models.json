@@ -276,7 +276,6 @@
           "atlas-cloud",
           "venice",
           "digitalocean",
-          "friendli",
           "google-vertex",
           "sambanova"
         ],
@@ -300,8 +299,17 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "DeepSeek V4 Pro (1M context) via OpenRouter (US-brokered) \u2014 MIT open-weight flagship for code generation and reasoning. MODERATE sensitivity per MIA-32. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot deepseek-v4-pro-20260423 ($0.43/$0.87 per M). US-brokered ONLY \u2014 the direct-China custom endpoint is deliberately NOT used.",
-      "intelligence_score": 17
+      "description": "DeepSeek V4 Pro (1M context) via OpenRouter (US-brokered) \u2014 MIT open-weight flagship for code generation and reasoning. MODERATE sensitivity per MIA-32. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot deepseek-v4-pro-20260423 ($0.43/$0.87 per M). US-brokered ONLY \u2014 the direct-China custom endpoint is deliberately NOT used. Route pin added 2026-08-27 (task-128): live OpenRouter pool carried Baidu/Alibaba/SiliconFlow/Novita/StreamLake PRC endpoints with no pin, so the 'US-brokered' claim above was prose, not a control.",
+      "intelligence_score": 17,
+      "openrouter_provider_route": {
+        "only": [
+          "digitalocean",
+          "deepinfra",
+          "atlas-cloud",
+          "venice"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "minimax/minimax-m3",
@@ -319,8 +327,17 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "MiniMax M3 (1M context) via OpenRouter (US-brokered) \u2014 open-weight Chinese-lineage frontier successor to M2. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot minimax-m3-20260531 ($0.30/$1.20 per M). Jurisdiction taxonomy same as M2.7 (GENESIS-096): `m3`/`minimax-m3` aliases US-brokered here; bare `minimax`/`m2` stay on the M2 seat (not repointed); direct-China M2.7 in providers/minimax.py stays LOW-sensitivity only.",
-      "intelligence_score": 17
+      "description": "MiniMax M3 (1M context) via OpenRouter (US-brokered) \u2014 open-weight Chinese-lineage frontier successor to M2. Added 2026-07-12 (Genesis, GENESIS-097 batch); probed live, id resolves to snapshot minimax-m3-20260531 ($0.30/$1.20 per M). Jurisdiction taxonomy same as M2.7 (GENESIS-096): `m3`/`minimax-m3` aliases US-brokered here; bare `minimax`/`m2` stay on the M2 seat (not repointed); direct-China M2.7 in providers/minimax.py stays LOW-sensitivity only. Route pin added 2026-08-27 (task-128): live OpenRouter pool carried Minimax-first-party/Novita/StreamLake/GMICloud endpoints with no pin.",
+      "intelligence_score": 17,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra",
+          "atlas-cloud",
+          "venice",
+          "sambanova"
+        ],
+        "allow_fallbacks": false
+      }
     },
     {
       "model_name": "minimax/minimax-m2",
@@ -733,10 +750,7 @@
         "only": [
           "digitalocean",
           "deepinfra",
-          "morph",
-          "parasail",
           "atlas-cloud",
-          "gmicloud",
           "venice"
         ],
         "allow_fallbacks": false
@@ -758,8 +772,16 @@
       "supports_temperature": true,
       "temperature_constraint": "range",
       "allow_code_generation": true,
-      "description": "Qwen3 Coder (256K ctx) via OpenRouter (US-brokered, serverless). GENESIS-097 \u2014 Together-serverless-retirement replacement (coder-flavored Qwen seat).",
-      "intelligence_score": 15
+      "description": "Qwen3 Coder (256K ctx) via OpenRouter (US-brokered, serverless). GENESIS-097 \u2014 Together-serverless-retirement replacement (coder-flavored Qwen seat). Route pin added 2026-08-27 (task-128): live OpenRouter pool carried Alibaba/Novita PRC endpoints with no pin.",
+      "intelligence_score": 15,
+      "openrouter_provider_route": {
+        "only": [
+          "google-vertex",
+          "deepinfra",
+          "venice"
+        ],
+        "allow_fallbacks": false
+      }
     }
   ]
 }
