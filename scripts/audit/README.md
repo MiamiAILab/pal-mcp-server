@@ -18,6 +18,17 @@ Enforces two orthogonal axes (stricter wins):
 Also: deprecated/removed slugs (Grok stale-alias hygiene), quarantine list (live→static
 bridge), diff-aware route-broadening detector.
 
+**Direction matters in the broadening check.** A seat with no `only` list (or with
+`allow_fallbacks:true`) is *unrestricted* — OpenRouter may serve it from the entire pool,
+PRC endpoints included. Introducing a closed pin on such a seat therefore SHRINKS the
+reachable set: it is reported as `f-pin-introduced` (WARN, tightening), not `f-broadening`.
+Only a genuine widening — adding providers to an existing pin, flipping `allow_fallbacks`
+to true, or emptying an existing `only` — is a BLOCK. This distinction is load-bearing:
+comparing `only` set-wise without it inverts the security meaning and BLOCKs exactly the
+remediation CR-001 requires. Legality of each provider named in a new pin is still enforced
+by the Axis-2 jurisdiction checks, which are the authority on *allowed vs not*; the
+broadening detector only classifies *direction of change*.
+
 ```bash
 # audit the live catalog
 python3 scripts/audit/provider_drift_static.py

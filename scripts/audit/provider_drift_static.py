@@ -287,6 +287,17 @@ def check_catalog(
     return findings
 
 
+def _is_unrestricted(route: dict) -> bool:
+    """True when OpenRouter may serve the seat from ANY provider.
+
+    That is the case with no `only` list at all, an empty one, or fallbacks
+    explicitly left open. An unrestricted seat's reachable provider set is the
+    whole OpenRouter pool — which is strictly larger than any explicit pin.
+    """
+    only = route.get("only") or []
+    return (not only) or route.get("allow_fallbacks") is True
+
+
 def _broadening(baseline: dict, catalog: dict) -> list[Finding]:
     out: list[Finding] = []
     base = {m.get("model_name"): m for m in _seats(baseline)}
@@ -298,6 +309,32 @@ def _broadening(baseline: dict, catalog: dict) -> list[Finding]:
         br = b.get("openrouter_provider_route") or {}
         cr = seat.get("openrouter_provider_route") or {}
         b_only, c_only = set(br.get("only") or []), set(cr.get("only") or [])
+
+        if _is_unrestricted(br):
+            # Baseline let OpenRouter serve this seat from the ENTIRE pool
+            # (PRC endpoints included). Introducing a closed pin can only
+            # SHRINK the reachable set, so it is a tightening — never
+            # broadening. Comparing `only` set-wise here would invert the
+            # security meaning and BLOCK exactly the remediation CR-001 wants
+            # (observed on task-128: pinning 3 unpinned Chinese-lineage seats
+            # was reported as f-broadening).
+            #
+            # This is NOT a hole: the legality of every provider named in the
+            # new pin is still enforced by the (b)/(c) jurisdiction checks,
+            # which BLOCK any non-western/unknown/expired provider. This branch
+            # only decides *broadening vs tightening*, never *allowed vs not*.
+            if c_only and cr.get("allow_fallbacks") is False:
+                out.append(
+                    Finding(
+                        WARN,
+                        "f-pin-introduced",
+                        slug,
+                        f"PR introduces a route pin {sorted(c_only)} on a previously UNPINNED seat — "
+                        "tightening (recorded for review, not a block).",
+                    )
+                )
+            continue
+
         if c_only - b_only:
             out.append(
                 Finding(

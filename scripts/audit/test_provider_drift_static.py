@@ -170,6 +170,44 @@ def test_broadening_fallback_flip_blocks():
     assert any(f.drift_class == "f-broadening" for f in b)
 
 
+# unpinned -> pinned is a TIGHTENING, not broadening (task-128 regression:
+# pinning 3 unpinned Chinese-lineage seats was reported as f-broadening,
+# i.e. the gate BLOCKed the exact remediation CR-001 requires).
+def test_introducing_pin_on_unpinned_seat_is_not_broadening():
+    seat = _clean_china_seat()
+    base_seat = copy.deepcopy(seat)
+    base_seat.pop("openrouter_provider_route", None)  # baseline: NO pin at all
+    cur = {"models": [copy.deepcopy(seat)]}  # current: western pin present
+    findings = _run(cur, baseline={"models": [base_seat]})
+    assert not any(f.drift_class == "f-broadening" for f in findings)
+    assert not _blocks(findings)
+    assert any(f.drift_class == "f-pin-introduced" for f in findings)
+
+
+def test_introducing_pin_from_empty_only_is_not_broadening():
+    seat = _clean_china_seat()
+    base_seat = copy.deepcopy(seat)
+    base_seat["openrouter_provider_route"] = {"only": [], "allow_fallbacks": False}
+    cur = {"models": [copy.deepcopy(seat)]}
+    findings = _run(cur, baseline={"models": [base_seat]})
+    assert not any(f.drift_class == "f-broadening" for f in findings)
+
+
+# NEGATIVE CONTROL for the fix above: relaxing the broadening comparison must
+# NOT let a non-western provider ride in on a newly-introduced pin. The
+# jurisdiction checks are the authority on legality; broadening only ever
+# classifies direction of change.
+def test_pin_introduced_with_bad_provider_still_blocks():
+    seat = _clean_china_seat()
+    base_seat = copy.deepcopy(seat)
+    base_seat.pop("openrouter_provider_route", None)  # baseline: unpinned
+    cur_seat = copy.deepcopy(seat)
+    cur_seat["openrouter_provider_route"]["only"].append("prc-cloud")
+    b = _blocks(_run({"models": [cur_seat]}, baseline={"models": [base_seat]}))
+    assert b, "a PRC provider in a newly-introduced pin must still BLOCK"
+    assert any(f.drift_class in ("b-provider-nonwestern", "b-provider-prc") for f in b)
+
+
 if __name__ == "__main__":
     # stdlib fallback runner
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
