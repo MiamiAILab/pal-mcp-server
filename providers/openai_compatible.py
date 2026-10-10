@@ -446,7 +446,11 @@ class OpenAICompatibleProvider(ModelProvider):
             "reasoning": {"effort": effort},
         }
 
-        completion_params["store"] = True
+        # Never ask the provider to retain the response.
+        # OpenAI's /v1/responses stores by default when `store` is omitted, so send an explicit False.
+        # OpenRouter's /responses rejects the field (upstream Issue #348), so omit it there.
+        if self.get_provider_type() != ProviderType.OPENROUTER:
+            completion_params["store"] = False
 
         # Add max tokens if specified (using max_completion_tokens for responses endpoint)
         if max_output_tokens:
