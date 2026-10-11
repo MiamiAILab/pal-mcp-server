@@ -101,14 +101,14 @@ class TestStoreParameterHandling(unittest.TestCase):
         # Verify store parameter is NOT in the request
         self.assertNotIn("store", captured_params, "OpenRouter requests should NOT include 'store' parameter")
 
-    def test_openai_responses_includes_store_parameter(self):
-        """Test that direct OpenAI provider includes store parameter in responses endpoint.
+    def test_openai_responses_sends_store_false(self):
+        """Test that direct OpenAI provider sends store=False on the responses endpoint.
 
-        **Feature: openrouter-store-parameter-fix, Property 2: Direct OpenAI requests include store parameter**
+        **Feature: openrouter-store-parameter-fix, Property 2: Direct OpenAI requests send store=False**
         **Validates: Requirements 1.2, 2.2**
 
-        Direct OpenAI API supports the store parameter for stored completions.
-        The store parameter should be included with value True for OpenAI requests.
+        OpenAI's /v1/responses stores the response when `store` is omitted, so the
+        provider must send an explicit False.
         """
         # Capture the completion_params passed to the API
         captured_params = {}
@@ -136,9 +136,9 @@ class TestStoreParameterHandling(unittest.TestCase):
                 temperature=0.7,
             )
 
-        # Verify store parameter IS in the request with value True
+        # Verify store parameter IS in the request with value False (omitting it means stored)
         self.assertIn("store", captured_params, "OpenAI requests should include 'store' parameter")
-        self.assertTrue(captured_params["store"], "OpenAI requests should have store=True")
+        self.assertIs(captured_params["store"], False, "OpenAI requests should have store=False")
 
 
 if __name__ == "__main__":
