@@ -177,6 +177,24 @@
       "supports_images": true,
       "supports_temperature": true,
       "max_image_size_mb": 20.0
+    },
+    {
+      "model_name": "gemini-4-argon",
+      "friendly_name": "Gemini 4 Argon",
+      "aliases": [],
+      "intelligence_score": 14,
+      "description": "Gemini 4 Argon (1M input, 32K output) - Native Google developer API. Added 2026-10-14 (Genesis, SOL-ARGON4-BENCH-LANE-20261014, Mario-requested). Id + limits measured via one models.list call 2026-10-14 (inputTokenLimit=1048576, outputTokenLimit=32768, thinking=true). NO aliases by design (SKILL.md ALIAS COLLISION) - call by full id. Capability flags left conservative until a gated generateContent probe; intelligence_score held below current native seats so auto-mode ordering does not change.",
+      "context_window": 1048576,
+      "max_output_tokens": 32768,
+      "max_thinking_tokens": 24576,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": false,
+      "supports_function_calling": false,
+      "supports_json_mode": false,
+      "supports_images": false,
+      "supports_temperature": true,
+      "allow_code_generation": false
     }
   ]
 }
