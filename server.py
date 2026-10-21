@@ -169,18 +169,28 @@ server: Server = Server("pal-server")
 # Constants for tool filtering
 ESSENTIAL_TOOLS = {"version", "listmodels"}
 
+# Tools denied at the code layer, independent of any per-host .env state (SOL-1096,
+# Mario ruled 2026-08-22, structural completion ratified 2026-08-25). clink spawns
+# vendor CLIs directly (no egress-gateway choke point, full environment inheritance,
+# codex configured with sandbox/approvals bypassed) — Selena verdict: 3x CRITICAL.
+# An untracked dotfile must not be able to re-enable it; removing a name from this
+# set requires a reviewed code change through the security gate, not a config edit.
+STRUCTURALLY_DISABLED_TOOLS = {"clink"}
+
 
 def parse_disabled_tools_env() -> set[str]:
     """
     Parse the DISABLED_TOOLS environment variable into a set of tool names.
 
     Returns:
-        Set of lowercase tool names to disable, empty set if none specified
+        Set of lowercase tool names to disable, always including the
+        structurally disabled set (env can add to it, never subtract from it)
     """
     disabled_tools_env = (get_env("DISABLED_TOOLS", "") or "").strip()
     if not disabled_tools_env:
-        return set()
-    return {t.strip().lower() for t in disabled_tools_env.split(",") if t.strip()}
+        return set(STRUCTURALLY_DISABLED_TOOLS)
+    env_set = {t.strip().lower() for t in disabled_tools_env.split(",") if t.strip()}
+    return env_set | STRUCTURALLY_DISABLED_TOOLS
 
 
 def validate_disabled_tools(disabled_tools: set[str], all_tools: dict[str, Any]) -> None:
