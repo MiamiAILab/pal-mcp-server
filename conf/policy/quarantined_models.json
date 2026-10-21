@@ -1,0 +1,8 @@
+{
+  "_README": {
+    "purpose": "The LIVE->STATIC bridge. Tier B (live scheduled audit, scripts/audit/provider_drift_live.py — separate follow-up) writes confirmed drift findings here (model_used!=requested, observed provider outside `only`, repeated dead seat). Tier A reads this and BLOCKs any listed slug. This keeps the merge gate deterministic: live anomalies become merge-blocking only AFTER confirmation is materialized into repo state. A human resolves + removes the entry.",
+    "canonical_policy": "governance/2026-07-13__llm-routing-jurisdiction-policy.md",
+    "schema": { "slug": "OpenRouter model slug", "drift_class": "c=model_mismatch | a=dead_seat | residency=observed_provider_outside_only", "confirmed_at": "ISO date", "evidence_ref": "artifact path / gen_id", "source": "provider_drift_live.py run id" }
+  },
+  "quarantined": []
+}
