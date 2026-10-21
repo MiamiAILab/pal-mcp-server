@@ -29,12 +29,29 @@ readonly RED='\033[0;31m'
 readonly NC='\033[0m' # No Color
 
 # Configuration
-readonly VENV_PATH=".pal_venv"
+readonly VENV_PATH=".zen_venv"
 readonly DOCKER_CLEANED_FLAG=".docker_cleaned"
 readonly DESKTOP_CONFIG_FLAG=".desktop_configured"
 readonly LOG_DIR="logs"
 readonly LOG_FILE="mcp_server.log"
-readonly LEGACY_MCP_NAMES=("zen" "zen-mcp" "zen-mcp-server" "zen_mcp" "zen_mcp_server")
+# "zen" REMOVED FROM THIS LIST 2026-08-23 (SOL-1095, Zen plan Phase 1 item 2).
+# This array is consumed by FIVE cleanup paths — Claude Code (:1266), Claude
+# Desktop (:1465), Gemini CLI (:1636), Codex (:1785) and Qwen (:2115) — each of
+# which REMOVES every name in it. With "zen" listed, running the documented
+# setup deleted our own live registration from five client configs at once.
+# The fleet calls mcp__zen__*; 12,579 files reference it and 547 are archived
+# governance memos, so the name is audit-trail integrity, not convenience.
+#
+# "pal" is DELIBERATELY NOT ADDED here, though it is the name we are moving away
+# from. The Qwen cleanup (:2115) removes every legacy name and never re-adds, so
+# listing "pal" would delete a working Qwen entry with no replacement — trading
+# one destructive default for another. This edit only STOPS destruction; it adds
+# none. A host that previously registered "pal" keeps it alongside "zen", which
+# is additive and harmless (and may explain the duplicate server processes
+# observed on this box). Retiring "pal" properly belongs with the Desktop/Gemini/
+# Codex/Qwen registration sections, which still write "pal" and are out of scope
+# here because none of them can be exercised from this session.
+readonly LEGACY_MCP_NAMES=("zen-mcp" "zen-mcp-server" "zen_mcp" "zen_mcp_server")
 
 # Determine portable arguments for sed -i (GNU vs BSD)
 declare -a SED_INPLACE_ARGS
@@ -1267,9 +1284,9 @@ check_claude_cli_integration() {
         claude mcp remove "$legacy_name" -s user >/dev/null 2>&1 || true
     done
 
-    # Check if pal is registered
+    # Check if zen is registered
     local mcp_list=$(claude mcp list 2>/dev/null)
-    if echo "$mcp_list" | grep -q "pal"; then
+    if echo "$mcp_list" | grep -q "zen"; then
         # Check if it's using the old Docker command
         if echo "$mcp_list" | grep -E "zen.*docker|zen.*compose" &>/dev/null; then
             print_warning "Found old Docker-based Zen registration, updating..."
@@ -1288,14 +1305,14 @@ check_claude_cli_integration() {
                 done <<< "$env_vars"
             fi
             
-            local claude_cmd="claude mcp add pal -s user$env_args -- \"$python_cmd\" \"$server_path\""
+            local claude_cmd="claude mcp add zen -s user$env_args -- \"$python_cmd\" \"$server_path\""
             if eval "$claude_cmd" 2>/dev/null; then
                 print_success "Updated PAL to become a standalone script with environment variables"
                 return 0
             else
                 echo ""
                 echo "Failed to update MCP registration. Please run manually:"
-                echo "  claude mcp remove pal -s user"
+                echo "  claude mcp remove zen -s user"
                 echo "  $claude_cmd"
                 return 1
             fi
@@ -1306,7 +1323,7 @@ check_claude_cli_integration() {
                 return 0
             else
                 print_warning "PAL registered with different path, updating..."
-                claude mcp remove pal -s user 2>/dev/null || true
+                claude mcp remove zen -s user 2>/dev/null || true
 
                 # Re-add with current path and environment variables
                 local env_vars=$(parse_env_variables)
@@ -1321,14 +1338,14 @@ check_claude_cli_integration() {
                     done <<< "$env_vars"
                 fi
                 
-                local claude_cmd="claude mcp add pal -s user$env_args -- \"$python_cmd\" \"$server_path\""
+                local claude_cmd="claude mcp add zen -s user$env_args -- \"$python_cmd\" \"$server_path\""
                 if eval "$claude_cmd" 2>/dev/null; then
                     print_success "Updated PAL with current path and environment variables"
                     return 0
                 else
                     echo ""
                     echo "Failed to update MCP registration. Please run manually:"
-                    echo "  claude mcp remove pal -s user"
+                    echo "  claude mcp remove zen -s user"
                     echo "  $claude_cmd"
                     return 1
                 fi
@@ -1353,7 +1370,7 @@ check_claude_cli_integration() {
             fi
             
             print_info "To add manually later, run:"
-            echo "  claude mcp add pal -s user$env_args -- $python_cmd $server_path"
+            echo "  claude mcp add zen -s user$env_args -- $python_cmd $server_path"
             return 0
         fi
 
@@ -1372,7 +1389,7 @@ check_claude_cli_integration() {
             done <<< "$env_vars"
         fi
         
-        local claude_cmd="claude mcp add pal -s user$env_args -- \"$python_cmd\" \"$server_path\""
+        local claude_cmd="claude mcp add zen -s user$env_args -- \"$python_cmd\" \"$server_path\""
         if eval "$claude_cmd" 2>/dev/null; then
             print_success "Successfully added PAL to Claude Code with environment variables"
             return 0
@@ -1710,7 +1727,7 @@ PY
 # Wrapper script for Gemini CLI compatibility
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
-exec .pal_venv/bin/python server.py "$@"
+exec .zen_venv/bin/python server.py "$@"
 EOF
         chmod +x "$pal_wrapper"
         print_success "Created pal-mcp-server wrapper script"
@@ -2317,7 +2334,7 @@ display_config_instructions() {
             fi
         done <<< "$env_vars"
     fi
-    echo -e "   ${GREEN}claude mcp add pal -s user$env_args -- $python_cmd $server_path${NC}"
+    echo -e "   ${GREEN}claude mcp add zen -s user$env_args -- $python_cmd $server_path${NC}"
     echo ""
 
     print_info "2. For Claude Desktop:"
