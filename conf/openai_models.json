@@ -419,6 +419,44 @@
       "default_reasoning_effort": "medium",
       "allow_code_generation": true,
       "temperature_constraint": "fixed"
+    },
+    {
+      "model_name": "gpt-6.2-sol",
+      "friendly_name": "OpenAI (GPT 6.2 Sol)",
+      "aliases": [],
+      "intelligence_score": 21,
+      "description": "GPT-6.2 Sol - OpenAI everyday coding/agent tier (changelog 2026-11-17). Added 2026-11-24 (Genesis, Mario 'Models: A', blanket approval 2026-11-24). Id confirmed via OpenAI models.list; direct probe served=gpt-6.2-sol. NO aliases by design - call by full id. Limits ASSUMED from GPT-6 family (unverified; models.list publishes none). Capability flags conservative (unprobed). Zen routes over Chat Completions (no tool calling there).",
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": false,
+      "supports_json_mode": false,
+      "supports_images": false,
+      "supports_temperature": true,
+      "default_reasoning_effort": "medium",
+      "allow_code_generation": false,
+      "temperature_constraint": "fixed"
+    },
+    {
+      "model_name": "gpt-6.2-astra",
+      "friendly_name": "OpenAI (GPT 6.2 Astra)",
+      "aliases": [],
+      "intelligence_score": 21,
+      "description": "GPT-6.2 Astra - OpenAI demanding reasoning/coding tier (changelog 2026-11-17). Added 2026-11-24 (Genesis, Mario 'Models: A', blanket approval 2026-11-24). Id confirmed via OpenAI models.list; direct probe served=gpt-6.2-astra. NO aliases by design - call by full id. Limits ASSUMED from GPT-6 family (unverified; models.list publishes none). Capability flags conservative (unprobed). Zen routes over Chat Completions (no tool calling there).",
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "supports_extended_thinking": true,
+      "supports_system_prompts": true,
+      "supports_streaming": true,
+      "supports_function_calling": false,
+      "supports_json_mode": false,
+      "supports_images": false,
+      "supports_temperature": true,
+      "default_reasoning_effort": "medium",
+      "allow_code_generation": false,
+      "temperature_constraint": "fixed"
     }
   ]
 }
