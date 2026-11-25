@@ -406,6 +406,37 @@
       }
     },
     {
+      "model_name": "moonshotai/kimi-k3.1-pro",
+      "aliases": [
+        "kimi-k3.1-pro",
+        "k3.1-pro",
+        "kimi-k3.1",
+        "k3.1"
+      ],
+      "context_window": 1048576,
+      "max_output_tokens": 65536,
+      "supports_extended_thinking": true,
+      "supports_json_mode": true,
+      "supports_function_calling": true,
+      "supports_images": false,
+      "max_image_size_mb": 0.0,
+      "supports_temperature": true,
+      "temperature_constraint": "range",
+      "allow_code_generation": false,
+      "description": "Kimi K3.1 Pro (1M context) via OpenRouter (US-brokered) — Moonshot/Chinese-lineage. OPTIONAL 4th panel seat per Mario decision 2026-11-10 20:10 EST ('A, let's add it'; bench-desk/decisions/2026-11-10__decision__panel-model-families-A.md). PLAIN CONTENT ONLY — never S-2 (Selena classifies; s2x before any send). US-BROKERED ONLY, same pattern as moonshotai/kimi-k2.7-code (Alan SM ruling PR #12, 2026-07-15; evidence-regime policy §4): pinned to DeepInfra (deepinfra/bf16, US) with allow_fallbacks:false; Moonshot AI and Alibaba endpoints (China-hosted) additionally on ignore. Inference cannot spill to any other provider. Account-level backstops (data policy, ignored providers) are set by Mario in OpenRouter. Conservative flags: image/video input listed by OpenRouter but not probed, so supports_images=false; allow_code_generation=false (advisory seat). Registered by Genesis 2026-11-10.",
+      "intelligence_score": 16,
+      "openrouter_provider_route": {
+        "only": [
+          "deepinfra"
+        ],
+        "ignore": [
+          "moonshotai",
+          "alibaba"
+        ],
+        "allow_fallbacks": false
+      }
+    },
+    {
       "model_name": "mistralai/mistral-large-2512",
       "aliases": [
         "mistral-large-3",
